@@ -1,0 +1,192 @@
+<!doctype html>
+<head>
+<title>Real Simple Bitcoin Payments</title>
+<link rel="icon" 
+      type="image/png" 
+      href="https://consensusreality.io/payments/Bitcoin-favicon.png">
+<style>
+html, body {
+    height: 100%;
+}
+
+html {
+    display: table;
+    margin: auto;
+}
+
+body {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.input-group {
+    width: 100%;
+}
+
+div {text-align: center; margin:auto;}
+</style>
+
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+
+<script>
+function RESTget(url) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.send( null );
+    return JSON.parse(xmlHttp.responseText);
+}
+
+
+$(document).ready(function() {
+        // get address from parameter
+        $.urlParam = function(name){
+          var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+          if (results==null){
+            return null;
+          }
+          else{
+            return results[1].replace('/','') || 0;
+          }
+        }
+
+        var address = $.urlParam('address') || '1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY' ;
+        var currency = $.urlParam('currency') || "BTC";
+        if ($.urlParam('amount')) {
+          $("#input_form").val($.urlParam('amount'));
+        }
+        $('#currency').text(currency);
+        var merchant_name = $.urlParam('label') || '';
+
+        // get rate from bitcoin average every minute
+
+        var rate = 1;
+        if (currency != "BTC") {
+          setInterval((function() {
+              $.ajax("https://api.bitcoinaverage.com/ticker/"+currency+"/last").done(function(x) {
+                  rate = x;
+                  $("#order").removeAttr("disabled");
+                  });
+              })(), 1000*60);
+        } else {
+          $("#order").removeAttr("disabled");
+        }
+
+        $("#order").click(function(e){
+            var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
+
+            var amount = $("#input_form").val();
+            if (merchant_name) {
+              var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+merchant_name;
+            } else {
+              var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8);
+            }
+            $('#qrcode').html("");  // reset from previous qrcode
+            $('#qrcode').qrcode(payment_uri);
+            $('#qrcode-text').text(payment_uri);
+            $('#qrcode-text').attr("href", payment_uri);
+
+            if (currency != "BTC") {
+              $('#exchange_rate').text('Rate 1 BTC = ' + rate.toLocaleString() + ' ' + currency);
+              $('#total_price').text('Total ' + amount.toLocaleString() + ' ' + currency + ' (' +
+                    (amount/rate).toFixed(8) + ' BTC)' );
+            } else {
+              $('#total_price').text('Total ' + amount.toLocaleString() + ' BTC');
+            }
+
+            $("#payment_confirmation").modal('toggle');
+
+            // waiting animation
+            $("#myModalLabel").text("Waiting for payment");
+            var ellipsis = setInterval(function(){
+                for (i = 1; i <= 3; i++) {
+                setTimeout(function() {
+                    $("#myModalLabel").append(".");
+                    }, i * 250);
+                }
+                $("#myModalLabel").text("Waiting for payment");
+                },1000);
+
+            var initial_balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
+            var blockchain_check = setInterval(function() {
+                    balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
+                    if (balance > initial_balance) {
+                      if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
+                        clearInterval(blockchain_check);
+                        clearInterval(ellipsis);
+                        $("#myModalLabel").text();
+                        $("#myModalLabel").append('<div class="alert alert-success"><strong>Success!</strong> The payment has been received.</div>');
+                      } else {
+                        clearInterval(blockchain_check);
+                        clearInterval(ellipsis);
+                        $("#myModalLabel").text("Amount received is insufficient");
+
+                        // close after modal 1 s
+                        setTimeout(function(){$("#close-model").trigger('click');}, 1000);
+                        $("#input_form").val(amount/rate - rate*(balance - initial_balance));
+                        $("#order").trigger('click')
+                      }
+                    }
+                    }, 5*1000);
+
+         });
+
+        // interpret <enter> keypress as click on the 'order' button
+        $('#input_form').keyup(function (e) {
+                if(e.which == 13) {
+                $('#order').trigger('click');
+                }
+                });
+
+        $("#close-modal").click(function(e){
+                clearInterval(blockchain_check);
+                });
+        $('#payment_confirmation').on('hidden.bs.modal', function () {
+                clearInterval(blockchain_check);
+                });
+});
+</script>
+
+</head>
+<body>
+<!-- Modal -->
+<div class="modal fade" id="payment_confirmation" tabindex="-1" role="dialog"
+    aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
+      </div>
+      <div id="menu_list" class="modal-body"> 
+          <div id="invoiceid"></div>
+          <div id="exchange_rate"></div>
+          <div id="total_price"></div>
+          <div id="qrcode" align="middle"></div>
+          <a id="qrcode-text" align="middle"></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="order_form">
+    <center><h1><img height="250" width="250"src="https://consensusreality.io/payments/BC_Logo_.png" alt=“Bitcoin Payment”</h1><h1>Payment Request<a rel="license"
+     href="https://www.gnu.org/copyleft/gpl.html"></a>
+</p>
+    </h1></center>
+    <div class="input-group">
+        <span class="input-group-btn">
+            <button id="currency" type="button" class="btn btn-default"></button>
+        </span>
+
+        <input type="text" id="input_form" class="form-control" placeholder="0">
+        <span class="input-group-btn">
+            <button id="order" disabled type="button" class="btn btn-primary">Pay</button>
+        </span>
+    </div>
+    <div id="order_amount" align="middle"></div>
+    <div style="margin-bottom: 20%;"></div>
+</div>
+</body>
