@@ -1,6 +1,11 @@
+
 <!doctype html>
 <head>
-<title>Real Simple Bitcoin Payments</title>
+
+<title>Real Simple Bitcoin Payment</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link rel="icon" 
       type="image/png" 
       href="https://consensusreality.io/payments/Bitcoin-favicon.png">
@@ -52,6 +57,8 @@ $(document).ready(function() {
           }
         }
 
+        var discount =$.urlParam('discount') || '0';
+        discount = (discount/100)+1;
         var address = $.urlParam('address') || '1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY' ;
         var currency = $.urlParam('currency') || "BTC";
         if ($.urlParam('amount')) {
@@ -66,7 +73,7 @@ $(document).ready(function() {
         if (currency != "BTC") {
           setInterval((function() {
               $.ajax("https://api.bitcoinaverage.com/ticker/"+currency+"/last").done(function(x) {
-                  rate = x;
+                  rate = x*discount;
                   $("#order").removeAttr("disabled");
                   });
               })(), 1000*60);
@@ -172,7 +179,7 @@ $(document).ready(function() {
 </div>
 
 <div id="order_form">
-    <center><h1><img height="250" width="250"src="https://consensusreality.io/payments/BC_Logo_.png" alt=“Bitcoin Payment”</h1><h1>Payment Request<a rel="license"
+    <center><h1><img height="250" width="250"src="https://consensusreality.io/payments/BC_Logo_.png" alt=â€œBitcoin Paymentâ€</h1><h1>Payment Request<a rel="license"
      href="https://www.gnu.org/copyleft/gpl.html"></a>
 </p>
     </h1></center>
@@ -181,7 +188,7 @@ $(document).ready(function() {
             <button id="currency" type="button" class="btn btn-default"></button>
         </span>
 
-        <input type="text" id="input_form" class="form-control" placeholder="0">
+        <input type="number" id="input_form" class="form-control" placeholder="0">
         <span class="input-group-btn">
             <button id="order" disabled type="button" class="btn btn-primary">Pay</button>
         </span>
