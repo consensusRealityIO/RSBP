@@ -8,8 +8,11 @@ Parameters can be hard coded in the file or passed in the URL.
 Parameters include:
 
 currency - The three character currency code. i.e. BTC, USD, IDR
+
 amount - The amount in fiat currency to be converted to BTC
+
 address - The Bitcoin address to be paid
+
 discount - The discount percentage to be applied to the converstion rate
 
 You can see a running example implementation here: https://consensusreality.io/payments/pay.html?address=1Ho5zPf5zvtCiUcAQaazH2auDrQz1ovfF6&currency=IDR&amount=1000000
