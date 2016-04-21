@@ -7,7 +7,7 @@ Parameters can be hard coded in the file or passed in the URL.
 
 Parameters include:
 
-currency - The three character currency code. i.e. BTC, USD, IDR
+currency - The three character currency code. i.e. BTC, USD, IDR, ZAR
 
 amount - The amount in fiat currency to be converted to BTC
 
