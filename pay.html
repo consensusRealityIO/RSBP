@@ -47,14 +47,7 @@ if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
         'content',
         'initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no'
       );
-  }
-function RESTget(url) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url, false );
-    xmlHttp.send( null );
-    return JSON.parse(xmlHttp.responseText);
 }
-
 
 $(document).ready(function() {
         // get address from parameter
@@ -105,6 +98,7 @@ $(document).ready(function() {
             $('#qrcode').qrcode(payment_uri);
             $('#qrcode-text').text(payment_uri);
             $('#qrcode-text').attr("href", payment_uri);
+            $("#myErrorModal").hide();
 
             if (currency != "BTC") {
               $('#exchange_rate').text('Rate 1 BTC = ' + rate.toLocaleString() + ' ' + currency);
@@ -116,20 +110,24 @@ $(document).ready(function() {
 
             $("#payment_confirmation").modal('toggle');
 
-            // waiting animation
-            $("#myModalLabel").text("Waiting for payment");
-            var ellipsis = setInterval(function(){
-                for (i = 1; i <= 3; i++) {
-                setTimeout(function() {
-                    $("#myModalLabel").append(".");
-                    }, i * 250);
-                }
-                $("#myModalLabel").text("Waiting for payment");
-                },1000);
+            start_check_balance(address, amount);
+        });
 
-            var initial_balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
-            var blockchain_check = setInterval(function() {
-                    balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
+        function start_check_balance(address, amount) {
+            $.get("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function(data) {
+                var initial_balance = parseInt(data);
+                waiting_animation();
+                check_balance(address, initial_balance, amount);
+            }).fail(function( jqxhr, textStatus, error ) {
+                $("#myErrorModal").html('<strong>Network error:</strong> could not get balance!').show();
+            });
+        }
+
+        var blockchain_check;
+        function check_balance(address, initial_balance, amount) {
+            blockchain_check = setInterval(function() {
+                $.get("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function(data) {
+                    balance = parseInt(data);
                     if (balance > initial_balance) {
                       if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
                         clearInterval(blockchain_check);
@@ -147,9 +145,28 @@ $(document).ready(function() {
                         $("#order").trigger('click')
                       }
                     }
-                    }, 5*1000);
+                    $("#myErrorModal").html('').hide();
+                }).fail(function( jqxhr, textStatus, error ) {
+                  $("#myErrorModal").html('<strong>Network error:</strong> could not get balance!').show();
+                });
+            }, 5*1000);
+        }
 
-         });
+        var ellipsis;
+        function waiting_animation() {
+            // waiting animation
+            $("#myModalLabel").text("Waiting for payment");
+            ellipsis = setInterval(function(){
+                for (i = 1; i <= 3; i++) {
+                setTimeout(function() {
+                    $("#myModalLabel").append(".");
+                    }, i * 250);
+                }
+                $("#myModalLabel").text("Waiting for payment");
+            },1000);
+        }
+
+
 
         // interpret <enter> keypress as click on the 'order' button
         $('#input_form').keyup(function (e) {
@@ -177,6 +194,7 @@ $(document).ready(function() {
       <div class="modal-header">
         <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
         <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
+        <h4 class="modal-title alert alert-danger" id="myErrorModal" style="display: none"></h4>
       </div>
       <div id="menu_list" class="modal-body"> 
           <div id="invoiceid"></div>
