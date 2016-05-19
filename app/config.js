@@ -1,7 +1,7 @@
 var RSBP_CONFIG = {
   "system": {
-    "urlEnabled": true, // if 'true', load the the configuration from the URL
-                        // parameters, else load it from RSBP_CONFIG.merchant
+    "urlConfig": true, // if 'true', load the the configuration from the URL
+                       // query string, else load it from RSBP_CONFIG.merchant
   },
   "merchant": {
     "name": "consensusReality",

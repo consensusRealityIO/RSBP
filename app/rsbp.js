@@ -12,13 +12,13 @@
   };
 
   var loadMerchantConfiguration = function () {
-    var urlEnabled = RSBP_CONFIG.system.urlEnabled;
+    var urlConfig = RSBP_CONFIG.system.urlConfig;
     var config = {
-      "name": (urlEnabled ? getQueryStringValue("label") : RSBP_CONFIG.merchant.name) || "",
-      "address": (urlEnabled ? getQueryStringValue("address") : RSBP_CONFIG.merchant.address) || "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
-      "currency": (urlEnabled ? getQueryStringValue("currency") : RSBP_CONFIG.merchant.currency) || "BTC",
-      "defaultAmount": (urlEnabled ? getQueryStringValue("amount") : RSBP_CONFIG.merchant.defaultAmount) || 0,
-      "discount": (urlEnabled ? getQueryStringValue("discount") : RSBP_CONFIG.merchant.discount) || 0
+      "name": (urlConfig ? getQueryStringValue("label") : RSBP_CONFIG.merchant.name) || "",
+      "address": (urlConfig ? getQueryStringValue("address") : RSBP_CONFIG.merchant.address) || "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
+      "currency": (urlConfig ? getQueryStringValue("currency") : RSBP_CONFIG.merchant.currency) || "BTC",
+      "defaultAmount": (urlConfig ? getQueryStringValue("amount") : RSBP_CONFIG.merchant.defaultAmount) || 0,
+      "discount": (urlConfig ? getQueryStringValue("discount") : RSBP_CONFIG.merchant.discount) || 0
     };
     config.discount = config.discount / 100;
     return config;
