@@ -14,10 +14,10 @@
   var loadMerchantConfiguration = function () {
     var urlConfig = RSBP_CONFIG.system.urlConfig;
     var config = {
-      "name": (urlConfig ? getQueryStringValue("label") : RSBP_CONFIG.payee.name) || "consensusReality",
+      "name": (urlConfig ? getQueryStringValue("name") : RSBP_CONFIG.payee.name) || "consensusReality",
       "address": (urlConfig ? getQueryStringValue("address") : RSBP_CONFIG.payee.address) || "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
       "currency": (urlConfig ? getQueryStringValue("currency") : RSBP_CONFIG.payee.currency) || "BTC",
-      "defaultAmount": (urlConfig ? getQueryStringValue("amount") : RSBP_CONFIG.payee.defaultAmount) || 0,
+      "amount": (urlConfig ? getQueryStringValue("amount") : 0) || 0,
       "discount": (urlConfig ? getQueryStringValue("discount") : RSBP_CONFIG.payee.discount) || 0
     };
     config.discount = config.discount / 100;

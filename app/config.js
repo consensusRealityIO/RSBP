@@ -7,7 +7,6 @@ var RSBP_CONFIG = {
     "name": "consensusReality",
     "address": "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
     "currency": "BTC",
-    "defaultAmount": 0,
     "discount": 0 // in percent
   }
 };
