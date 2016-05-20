@@ -56,11 +56,11 @@ function RESTget(url) {
 }
 
 $(document).ready(function() {
-  var merchantName = RSBP_CONFIG.merchant.name;
-  var address = RSBP_CONFIG.merchant.address;
-  var currency = RSBP_CONFIG.merchant.currency;
+  var payeeName = RSBP_CONFIG.payee.name;
+  var address = RSBP_CONFIG.payee.address;
+  var currency = RSBP_CONFIG.payee.currency;
   $('#currency').text(currency);
-  $("#input_form").val(RSBP_CONFIG.merchant.defaultAmount);
+  $("#input_form").val(RSBP_CONFIG.payee.defaultAmount);
 
         // get rate from bitcoin average every minute
 
@@ -80,8 +80,8 @@ $(document).ready(function() {
             var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
 
             var amount = $("#input_form").val();
-            if (merchantName) {
-              var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+merchantName;
+            if (payeeName) {
+              var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+payeeName;
             } else {
               var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8);
             }

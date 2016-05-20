@@ -1,13 +1,13 @@
 var RSBP_CONFIG = {
   "system": {
     "urlConfig": true, // if 'true', load the the configuration from the URL
-                       // query string, else load it from RSBP_CONFIG.merchant
+                       // query string, else load it from RSBP_CONFIG.payee
   },
-  "merchant": {
+  "payee": {
     "name": "consensusReality",
     "address": "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
     "currency": "BTC",
     "defaultAmount": 0,
-    "discount": 0
+    "discount": 0 // in percent
   }
 };
