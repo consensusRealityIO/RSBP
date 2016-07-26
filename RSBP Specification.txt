@@ -1,0 +1,92 @@
+RSBP - Behavior Driven Development Specification
+
+Roles:
+Merchant
+Customer
+ 
+As a Merchant
+I want to accept Bitcoin payment from a Customer
+So that the correct amount of Bitcoin is calculated and presented to the Customer and Bitcoin payment receipt is acknowledged
+So that I can be certain that correct amount of Bitcoin arrived successfully.
+ 
+Scenario 1: Successful Transaction
+
+Given the Merchant would like to charge the customer $25.43 USD 
+ 	And the System has an Internet connection
+ 	And the System can connect to Bitcoin Price Feed for USD (i.e. bitcoinaverage.com)
+
+When the Merchant has specified currency to be USD
+	and enters the amount 25.43 
+	and presses enter or pay button
+	
+Then the System should look up the current price of Bitcoin in USD
+ And the System should convert 25.43 USD amount into Bitcoin BTC amount
+ And the System should display a QR Code which encodes a Bitcoin URI (i.e. bitcoin:1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY?amount=0.03868269)
+
+Then the System should monitor the Bitcoin address for the proper payment.
+
+When correct payment amount arrives successfully, System should display a message in green “Payment Successful”
+
+System should be ready for next Bitcoin payment. 
+
+Scenario 2: System cannot reach price lookup mechanism
+
+Given the Merchant would like to charge the customer $25.43 USD 
+ 	And the System has an Internet connection
+ 	And the System can NOT connect to Bitcoin Price Feed for USD (i.e. bitcoinaverage.com)
+
+Then System should display message “Bitcoin Price Data Unavailable”
+
+Scenario 3: System has no Internet connectivity
+
+Given the Merchant would like to charge the customer $25.43 USD 
+ 	And the System has NO Internet connection
+
+Then System should display message “No Internet Connection Available”
+
+Scenario 4: Customer sends incorrect lower amount
+
+Given the Merchant would like to charge the customer $25.43 USD 
+ 	And the System has an Internet connection
+ 	And the System can connect to Bitcoin Price Feed for USD (i.e. bitcoinaverage.com)
+
+When the Merchant has specified currency to be USD
+	and enters the amount 25.43 
+	and presses enter or pay button
+	
+Then the System should look up the current price of Bitcoin in USD
+ And the System should convert 25.43 USD amount into Bitcoin BTC amount
+ And the System should display a QR Code which encodes a Bitcoin URI (i.e. bitcoin:1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY?amount=0.03868269)
+
+Then the System should monitor the Bitcoin address for the proper payment amount.
+
+When payment arrives, System should check that proper amount has arrived.
+
+When payment is evaluated to be too low 
+	Then System should display message “Payment Amount Incorrect”
+	Then System should display button “Pay Remainder”
+	Then System should calulate remainder amount and display QR code for payment and acknowledgment.  	
+
+Scenario 5: Customer sends payment but System does not Acknowledge payament
+
+Given the Merchant has requested payment 
+	and presented Customer with QR code 
+	and customer has scanned code and payed with his wallet
+	and System appears to still be awaiting payment
+
+	Then Merchant should click link “Verify” which takes user to Blockchain.info for the Bitcoin address to be paid. (i.e https://blockchain.info/address/1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY)
+
+
+Non Functional Requirements:
+
+Website should enforce https:// connectivity
+Website should load quickly
+Website text should be large, easy to read and unambiguous
+Website should alert user to potential problems (i.e. connectivity problem, or API unavailability)
+System should have multiple redundant price lookup mechanisms
+System should generate QR codes locally
+System should NOT rely on closed source or proprietary services
+Every external System resource or API should have a redundant delivery mechanism. (i.e. Price can be fetched from bitcoinaverage or bitpay or coindesk)
+External libraries should be served through fastest delivery mechanism (i.e. cloudflare) with local delivery backup. (i.e. fetch jquery.qrcode.min.js from https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js but if that fails, fetch from https://consensusreality.io/libraries/jquery.qrcode/1.0/jquery.qrcode.min.js)
+
+
