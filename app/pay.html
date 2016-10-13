@@ -110,27 +110,31 @@ $(document).ready(function() {
                 $("#myModalLabel").text("Waiting for payment");
                 },1000);
 
-            var initial_balance = RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
-            var blockchain_check = setInterval(function() {
-                    balance = RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
-                    if (balance > initial_balance) {
-                      if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
-                        clearInterval(blockchain_check);
-                        clearInterval(ellipsis);
-                        $("#myModalLabel").text();
-                        $("#myModalLabel").append('<div class="alert alert-success"><strong>Success!</strong> The payment has been received.</div>');
-                      } else {
-                        clearInterval(blockchain_check);
-                        clearInterval(ellipsis);
-                        $("#myModalLabel").text("Amount received is insufficient");
+            RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
+              var initial_balance = JSON.parse(body);
+              var blockchain_check = setInterval(function() {
+                      RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
+                        var balance = JSON.parse(body);
+                        if (balance > initial_balance) {
+                          if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
+                            clearInterval(blockchain_check);
+                            clearInterval(ellipsis);
+                            $("#myModalLabel").text();
+                            $("#myModalLabel").append('<div class="alert alert-success"><strong>Success!</strong> The payment has been received.</div>');
+                          } else {
+                            clearInterval(blockchain_check);
+                            clearInterval(ellipsis);
+                            $("#myModalLabel").text("Amount received is insufficient");
 
-                        // close after modal 1 s
-                        setTimeout(function(){$("#close-model").trigger('click');}, 1000);
-                        $("#input_form").val(amount/rate - rate*(balance - initial_balance));
-                        $("#order").trigger('click')
-                      }
-                    }
+                            // close after modal 1 s
+                            setTimeout(function(){$("#close-model").trigger('click');}, 1000);
+                            $("#input_form").val(amount/rate - rate*(balance - initial_balance));
+                            $("#order").trigger('click')
+                          }
+                        }
+                      });
                     }, 5*1000);
+            });
          });
 
          // interpret <enter> keypress as click on the 'order' button
