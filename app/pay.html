@@ -33,12 +33,13 @@ body {
 div {text-align: center; margin:auto;}
 </style>
 
-<script src="config.js"></script>
-<script src="rsbp.js"></script>
 <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="js/config.js"></script>
+<script src="js/connector.js"></script>
 
 <script>
 if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
@@ -48,12 +49,6 @@ if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
         'initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no'
       );
   }
-function RESTget(url) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url, false );
-    xmlHttp.send( null );
-    return JSON.parse(xmlHttp.responseText);
-}
 
 $(document).ready(function() {
 
@@ -115,9 +110,9 @@ $(document).ready(function() {
                 $("#myModalLabel").text("Waiting for payment");
                 },1000);
 
-            var initial_balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
+            var initial_balance = RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
             var blockchain_check = setInterval(function() {
-                    balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
+                    balance = RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
                     if (balance > initial_balance) {
                       if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
                         clearInterval(blockchain_check);
@@ -136,22 +131,21 @@ $(document).ready(function() {
                       }
                     }
                     }, 5*1000);
-
          });
 
-        // interpret <enter> keypress as click on the 'order' button
-        $('#input_form').keyup(function (e) {
-                if(e.which == 13) {
-                $('#order').trigger('click');
-                }
-                });
+         // interpret <enter> keypress as click on the 'order' button
+         $('#input_form').keyup(function (e) {
+                 if(e.which == 13) {
+                 $('#order').trigger('click');
+                 }
+                 });
 
-        $("#close-modal").click(function(e){
-                clearInterval(blockchain_check);
-                });
-        $('#payment_confirmation').on('hidden.bs.modal', function () {
-                clearInterval(blockchain_check);
-                });
+         $("#close-modal").click(function(e){
+                 clearInterval(blockchain_check);
+                 });
+         $('#payment_confirmation').on('hidden.bs.modal', function () {
+                 clearInterval(blockchain_check);
+                 });
 });
 </script>
 
@@ -193,6 +187,11 @@ $(document).ready(function() {
         </span>
     </div>
     <div id="order_amount" align="middle"></div>
-    <div style="margin-bottom: 20%;"></div>
+    <div style="margin-bottom: 20%; margin-top: 15px;">
+      <div class="status-div alert alert-danger invisible">
+        <span class="glyphicon glyphicon-exclamation-sign"></span>
+        <span class="status-content"></span>
+      </div>
+    </div>
 </div>
 </body>
