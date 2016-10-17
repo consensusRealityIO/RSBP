@@ -58,10 +58,10 @@ $(document).ready(function() {
   var amount = RSBP_CONFIG.payee.amount;
   var discount = RSBP_CONFIG.payee.discount;
 
-  $('#currency').text(currency);
-  $("#input_form").val(amount);
+  // Setup currency button
+  $('#currencyButton').text(currency);
 
-  // Pay button controller
+  // Setup pay button controller
   let rateReceived = false;
   let rate = 1;
   let getRate = function () {
@@ -108,10 +108,13 @@ $(document).ready(function() {
     updatePayButton();
   }, false);
 
+  // Setup currency amount input field
+  $("#currencyAmountInputField").val(amount);
+
         $("#payButton").click(function(e){
             var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
 
-            amount = $("#input_form").val();
+            amount = $("#currencyAmountInputField").val();
             if (payeeName) {
               var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+payeeName;
             } else {
@@ -161,7 +164,7 @@ $(document).ready(function() {
 
                             // close after modal 1 s
                             setTimeout(function(){$("#close-model").trigger('click');}, 1000);
-                            $("#input_form").val(amount/rate - rate*(balance - initial_balance));
+                            $("#currencyAmountInputField").val(amount/rate - rate*(balance - initial_balance));
                             $("#payButton").trigger('click')
                           }
                         }
@@ -171,7 +174,7 @@ $(document).ready(function() {
          });
 
          // interpret <enter> keypress as click on the 'order' button
-         $('#input_form').keyup(function (e) {
+         $('#currencyAmountInputField').keyup(function (e) {
                  if(e.which == 13) {
                  $('#payButton').trigger('click');
                  }
@@ -188,40 +191,39 @@ $(document).ready(function() {
 
 </head>
 <body>
-<!-- Modal -->
-<div class="modal fade" id="payment_confirmation" tabindex="-1" role="dialog"
-    aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
-      </div>
-      <div id="menu_list" class="modal-body">
-          <div id="invoiceid"></div>
-          <div id="exchange_rate"></div>
-          <div id="total_price"></div>
-          <div id="qrcode" align="middle"></div>
-          <a id="qrcode-text" align="middle"></a>
+  <!-- Modal -->
+  <div class="modal fade" id="payment_confirmation" tabindex="-1" role="dialog"
+      aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
+        </div>
+        <div id="menu_list" class="modal-body">
+            <div id="invoiceid"></div>
+            <div id="exchange_rate"></div>
+            <div id="total_price"></div>
+            <div id="qrcode" align="middle"></div>
+            <a id="qrcode-text" align="middle"></a>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div id="order_form">
-    <center><h1><img height="250" width="250"src="img/logo.png" alt="Bitcoin Payment"</h1><h1>Payment Request<a rel="license"
-     href="https://www.gnu.org/copyleft/gpl.html"></a>
-</p>
-    </h1></center>
+  <div id="order_form">
+    <center>
+      <img height="250" width="250"src="img/logo.png" alt="Bitcoin Payment">
+      <h1>Payment Request</h1>
+    </center>
     <div class="input-group">
-        <span class="input-group-btn">
-            <button id="currency" type="button" class="btn btn-default"></button>
-        </span>
-
-        <input type="number" id="input_form" class="form-control" placeholder="0">
-        <span class="input-group-btn">
-            <button id="payButton" type="button" class="btn btn-primary">Pay</button>
-        </span>
+      <span class="input-group-btn">
+        <button id="currencyButton" type="button" class="btn btn-default disabled"></button>
+      </span>
+      <input id="currencyAmountInputField" type="number" class="form-control" placeholder="0">
+      <span class="input-group-btn">
+        <button id="payButton" type="button" class="btn btn-primary">Pay</button>
+      </span>
     </div>
     <div id="order_amount" align="middle"></div>
     <div style="margin-bottom: 20%; margin-top: 15px;">
@@ -230,5 +232,5 @@ $(document).ready(function() {
         <span class="status-content"></span>
       </div>
     </div>
-</div>
+  </div>
 </body>
