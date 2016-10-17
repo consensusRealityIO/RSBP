@@ -2,6 +2,8 @@ var RSBP = (function (RSBP, window, $) {
 
   "use strict";
 
+  let TIMEOUT = 2000;
+
   let online = false;
   let connectivityEvent = new Event("connectivity");
 
@@ -30,8 +32,6 @@ var RSBP = (function (RSBP, window, $) {
   };
 
   let setupWebSocket = function () {
-
-    let TIMEOUT = 1500;
 
     let webSocket = new WebSocket("ws://echo.websocket.org/");
 
@@ -87,11 +87,16 @@ var RSBP = (function (RSBP, window, $) {
       xhr.send();
   };
 
+  let ajax = function (url) {
+    return $.ajax(url, {timeout: TIMEOUT});
+  };
+
   doOnline();
   setupWebSocket();
 
   RSBP.isOnline = isOnline;
   RSBP.fetch = fetch;
+  RSBP.ajax = ajax;
 
   return RSBP;
 

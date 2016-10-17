@@ -68,10 +68,16 @@ $(document).ready(function() {
     if (RSBP.isOnline()) {
       let url = "https://api.bitcoinaverage.com/ticker/"+currency+"/last";
       console.info("Sending conversion rate request to " + url);
-      $.ajax(url).done(function (x) {
+      let jQXhr = RSBP.ajax(url);
+      jQXhr.done(function (data) {
         rateReceived = true;
-        rate = x * (1 + discount);
+        rate = data * (1 + discount);
         console.info("Conversion rate received: " + rate + " " + currency + "/BTC");
+        updatePayButton();
+      });
+      jQXhr.fail(function (jQXhr, status, error) {
+        rateReceived = false;
+        console.error("Cannot get conversion rate: " + status);
         updatePayButton();
       });
     }
@@ -85,7 +91,9 @@ $(document).ready(function() {
       $("#payButton").addClass("disabled");
     }
   };
-  $("#payButton").addClass("disabled");
+  if (!RSBP.isOnline()) {
+    $("#payButton").addClass("disabled");
+  }
   if (currency !== "BTC") {
     if (RSBP.isOnline()) {
       getRate();
