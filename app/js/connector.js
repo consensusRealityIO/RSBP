@@ -3,6 +3,11 @@ var RSBP = (function (RSBP, window, $) {
   "use strict";
 
   let online = false;
+  let connectivityEvent = new Event("connectivity");
+
+  let isOnline = function () {
+    return online;
+  };
 
   let doOnline = function () {
     if (!online) {
@@ -10,6 +15,7 @@ var RSBP = (function (RSBP, window, $) {
       $(".status-div").addClass("invisible");
       $(".status-content").text("");
       console.info("App online");
+      window.dispatchEvent(connectivityEvent);
     }
   };
 
@@ -19,6 +25,7 @@ var RSBP = (function (RSBP, window, $) {
       $(".status-div").removeClass("invisible");
       $(".status-content").text("Connection error");
       console.info("App offline");
+      window.dispatchEvent(connectivityEvent);
     }
   };
 
@@ -80,8 +87,10 @@ var RSBP = (function (RSBP, window, $) {
       xhr.send();
   };
 
+  doOnline();
   setupWebSocket();
 
+  RSBP.isOnline = isOnline;
   RSBP.fetch = fetch;
 
   return RSBP;

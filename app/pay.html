@@ -61,21 +61,46 @@ $(document).ready(function() {
   $('#currency').text(currency);
   $("#input_form").val(amount);
 
-        // get rate from bitcoin average every minute
+  // Pay button controller
+  let rateReceived = false;
+  let rate = 1;
+  let getRate = function () {
+    if (RSBP.isOnline()) {
+      let url = "https://api.bitcoinaverage.com/ticker/"+currency+"/last";
+      console.info("Sending conversion rate request to " + url);
+      $.ajax(url).done(function (x) {
+        rateReceived = true;
+        rate = x * (1 + discount);
+        console.info("Conversion rate received: " + rate + " " + currency + "/BTC");
+        updatePayButton();
+      });
+    }
+  };
+  let updatePayButton = function () {
+    if (RSBP.isOnline() && (rateReceived || currency === "BTC")) {
+      console.info("Enabling pay button");
+      $("#payButton").removeClass("disabled");
+    } else {
+      console.info("Disabling pay button");
+      $("#payButton").addClass("disabled");
+    }
+  };
+  $("#payButton").addClass("disabled");
+  if (currency !== "BTC") {
+    if (RSBP.isOnline()) {
+      getRate();
+    }
+    window.setInterval(getRate, 60 * 1000);
+  }
+  window.addEventListener("connectivity", function () {
+    rateReceived = false;
+    if (RSBP.isOnline()) {
+      getRate();
+    }
+    updatePayButton();
+  }, false);
 
-        var rate = 1;
-        if (currency != "BTC") {
-          setInterval((function() {
-              $.ajax("https://api.bitcoinaverage.com/ticker/"+currency+"/last").done(function(x) {
-                  rate = x * (1 + discount);
-                  $("#order").removeAttr("disabled");
-                  });
-              })(), 1000*60);
-        } else {
-          $("#order").removeAttr("disabled");
-        }
-
-        $("#order").click(function(e){
+        $("#payButton").click(function(e){
             var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
 
             amount = $("#input_form").val();
@@ -129,7 +154,7 @@ $(document).ready(function() {
                             // close after modal 1 s
                             setTimeout(function(){$("#close-model").trigger('click');}, 1000);
                             $("#input_form").val(amount/rate - rate*(balance - initial_balance));
-                            $("#order").trigger('click')
+                            $("#payButton").trigger('click')
                           }
                         }
                       });
@@ -140,7 +165,7 @@ $(document).ready(function() {
          // interpret <enter> keypress as click on the 'order' button
          $('#input_form').keyup(function (e) {
                  if(e.which == 13) {
-                 $('#order').trigger('click');
+                 $('#payButton').trigger('click');
                  }
                  });
 
@@ -187,7 +212,7 @@ $(document).ready(function() {
 
         <input type="number" id="input_form" class="form-control" placeholder="0">
         <span class="input-group-btn">
-            <button id="order" disabled type="button" class="btn btn-primary">Pay</button>
+            <button id="payButton" type="button" class="btn btn-primary">Pay</button>
         </span>
     </div>
     <div id="order_amount" align="middle"></div>
