@@ -4,6 +4,7 @@
 
   let CURRENCY = RSBP_CONFIG.payee.currency;
   let DISCOUNT = RSBP_CONFIG.payee.discount;
+  let USE_CORS_PROXY = RSBP_CONFIG.rate.useCorsProxy;
   let EXPIRATION = RSBP_CONFIG.rate.expiration;
   let IS_BTC = CURRENCY === "BTC";
   let URL = "https://api.bitcoinaverage.com/ticker/" + CURRENCY + "/last";
@@ -25,7 +26,7 @@
 
   let fetchRate = function () {
     console.info("Sending conversion rate request to " + URL);
-    let jQXhr = RSBP.ajax(URL, true);
+    let jQXhr = RSBP.ajax(URL, USE_CORS_PROXY);
     jQXhr.done(function (data) {
       console.info("Conversion rate received: " + data + " " + CURRENCY + "/BTC");
       rate = data * (1 + (DISCOUNT / 100));

@@ -9,6 +9,7 @@ var RSBP_CONFIG = {
     "corsProxy": "https://crossorigin.me/"
   },
   "rate": {
+    "useCorsProxy": false,
     "expiration": 2 * 60 * 1000 // in milliseconds
   },
   "payee": {
