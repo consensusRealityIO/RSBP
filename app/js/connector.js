@@ -16,8 +16,6 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
   let doOnline = function () {
     if (!online) {
       online = true;
-      $(".status-div").addClass("invisible");
-      $(".status-content").text("");
       console.info("App online");
       window.dispatchEvent(connectivityEvent);
     }
@@ -26,8 +24,6 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
   let doOffline = function () {
     if (online) {
       online = false;
-      $(".status-div").removeClass("invisible");
-      $(".status-content").text("Connection error");
       console.info("App offline");
       window.dispatchEvent(connectivityEvent);
     }
@@ -101,7 +97,6 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
     return $.ajax(url);
   };
 
-  doOnline();
   setupWebSocket();
 
   RSBP.isOnline = isOnline;
