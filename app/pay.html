@@ -64,7 +64,7 @@ $(document).ready(function() {
 
   // Setup pay button controller
   let updatePayButton = function () {
-    if (RSBP.isRateValid()) {
+    if (RSBP.isOnline() && RSBP.isRateValid()) {
       console.info("Enabling pay button");
       $("#payButton").removeClass("disabled");
     } else {
@@ -73,6 +73,7 @@ $(document).ready(function() {
     }
   };
   updatePayButton();
+  window.addEventListener("connectivity", updatePayButton);
   window.addEventListener("rate", updatePayButton);
 
   // Setup status controller
