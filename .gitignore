@@ -1,2 +1,5 @@
 # Ignore OS X directory files
 .DS_Store
+
+# Ignore bower installation directory
+app/bower_components
