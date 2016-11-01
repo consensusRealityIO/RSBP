@@ -132,6 +132,7 @@ $(document).ready(function() {
         $("#payButton").click(function(e){
             var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
 
+            let rate = RSBP.getRate();
             amount = $("#currencyAmountInputField").val();
             if (payeeName) {
               var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+payeeName;
