@@ -40,6 +40,7 @@ div {text-align: center; margin:auto;}
 <script src="config.js"></script>
 <script src="js/config.js"></script>
 <script src="js/connector.js"></script>
+<script src="js/rate.js"></script>
 
 <script>
 if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
@@ -62,28 +63,8 @@ $(document).ready(function() {
   $('#currencyButton').text(currency);
 
   // Setup pay button controller
-  let rate = 1;
-  let rateReceived = (currency === "BTC");
-  let rateReceivedTime = null;
-  let getRate = function () {
-    if (currency === "BTC") {
-      rate = 1;
-      rateReceived = true;
-    } else if (RSBP.isOnline()) {
-      let url = "https://api.bitcoinaverage.com/ticker/"+currency+"/last";
-      console.info("Sending conversion rate request to " + url);
-      let jQXhr = RSBP.ajax(url, true);
-      jQXhr.done(function (data) {
-        rate = data * (1 + discount);
-        rateReceived = true;
-        rateReceivedTime = Date.now();
-        console.info("Conversion rate received: " + rate + " " + currency + "/BTC");
-        updatePayButton();
-      });
-    }
-  };
   let updatePayButton = function () {
-    if (RSBP.isOnline() && rateReceived) {
+    if (RSBP.isRateValid()) {
       console.info("Enabling pay button");
       $("#payButton").removeClass("disabled");
     } else {
@@ -91,23 +72,10 @@ $(document).ready(function() {
       $("#payButton").addClass("disabled");
     }
   };
-  if (currency !== "BTC") {
-    getRate();
-    window.setInterval(getRate, 60 * 1000);
-    window.setInterval(function () {
-      if (rateReceived &&
-          Math.abs(Date.now() - lastReceivedTime) <= 2 * 60 * 1000) {
-        console.info("Rate outdated");
-        rateReceived = false;
-        updatePayButton();
-      }
-    }, 2 * 60 * 1000);
-  }
-  window.addEventListener("connectivity", function () {
-    getRate();
-    updatePayButton();
-  }, false);
   updatePayButton();
+  window.addEventListener("rate", function () {
+    updatePayButton();
+  });
 
   // Setup currency amount input field
   $("#currencyAmountInputField").val(amount);

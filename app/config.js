@@ -8,6 +8,9 @@ var RSBP_CONFIG = {
     "reconnectInterval": 1000, // in milliseconds
     "corsProxy": "https://crossorigin.me/"
   },
+  "rate": {
+    "expiration": 2 * 60 * 1000 // in milliseconds
+  },
   "payee": {
     "name": "consensusReality",
     "address": "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
