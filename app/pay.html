@@ -62,28 +62,28 @@ $(document).ready(function() {
   $('#currencyButton').text(currency);
 
   // Setup pay button controller
-  let rateReceived = false;
   let rate = 1;
+  let rateReceived = (currency === "BTC");
+  let rateReceivedTime = null;
   let getRate = function () {
-    if (RSBP.isOnline()) {
+    if (currency === "BTC") {
+      rate = 1;
+      rateReceived = true;
+    } else if (RSBP.isOnline()) {
       let url = "https://api.bitcoinaverage.com/ticker/"+currency+"/last";
       console.info("Sending conversion rate request to " + url);
-      let jQXhr = RSBP.ajax(url);
+      let jQXhr = RSBP.ajax(url, true);
       jQXhr.done(function (data) {
-        rateReceived = true;
         rate = data * (1 + discount);
+        rateReceived = true;
+        rateReceivedTime = Date.now();
         console.info("Conversion rate received: " + rate + " " + currency + "/BTC");
-        updatePayButton();
-      });
-      jQXhr.fail(function (jQXhr, status, error) {
-        rateReceived = false;
-        console.error("Cannot get conversion rate: " + status);
         updatePayButton();
       });
     }
   };
   let updatePayButton = function () {
-    if (RSBP.isOnline() && (rateReceived || currency === "BTC")) {
+    if (RSBP.isOnline() && rateReceived) {
       console.info("Enabling pay button");
       $("#payButton").removeClass("disabled");
     } else {
@@ -91,22 +91,23 @@ $(document).ready(function() {
       $("#payButton").addClass("disabled");
     }
   };
-  if (!RSBP.isOnline()) {
-    $("#payButton").addClass("disabled");
-  }
   if (currency !== "BTC") {
-    if (RSBP.isOnline()) {
-      getRate();
-    }
+    getRate();
     window.setInterval(getRate, 60 * 1000);
+    window.setInterval(function () {
+      if (rateReceived &&
+          Math.abs(Date.now() - lastReceivedTime) <= 2 * 60 * 1000) {
+        console.info("Rate outdated");
+        rateReceived = false;
+        updatePayButton();
+      }
+    }, 2 * 60 * 1000);
   }
   window.addEventListener("connectivity", function () {
-    rateReceived = false;
-    if (RSBP.isOnline()) {
-      getRate();
-    }
+    getRate();
     updatePayButton();
   }, false);
+  updatePayButton();
 
   // Setup currency amount input field
   $("#currencyAmountInputField").val(amount);
