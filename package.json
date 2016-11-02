@@ -1,0 +1,17 @@
+{
+  "name": "RSBP",
+  "version": "0.1.0",
+  "description": "A POS system for Bitcoin payments",
+  "devDependencies": {
+    "eslint": "3.x",
+    "htmlhint": "0.x"
+  },
+  "bin": {
+    "eslint": "node_modules/.bin/eslint",
+    "htmlhint": "node_modules/.bin/htmlhint"
+  },
+  "scripts": {
+    "lint": "eslint . && htmlhint .",
+    "postinstall": "bower install"
+  }
+}

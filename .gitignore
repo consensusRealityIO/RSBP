@@ -1,5 +1,6 @@
 # Ignore OS X directory files
 .DS_Store
 
-# Ignore bower installation directory
+# Ignore files created by package managers
+node_modules
 app/bower_components
