@@ -33,12 +33,14 @@ body {
 div {text-align: center; margin:auto;}
 </style>
 
-<script src="config.js"></script>
-<script src="rsbp.js"></script>
 <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="js/config.js"></script>
+<script src="js/connector.js"></script>
+<script src="js/rate.js"></script>
 
 <script>
 if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
@@ -48,12 +50,6 @@ if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
         'initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no'
       );
   }
-function RESTget(url) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url, false );
-    xmlHttp.send( null );
-    return JSON.parse(xmlHttp.responseText);
-}
 
 $(document).ready(function() {
 
@@ -63,27 +59,81 @@ $(document).ready(function() {
   var amount = RSBP_CONFIG.payee.amount;
   var discount = RSBP_CONFIG.payee.discount;
 
-  $('#currency').text(currency);
-  $("#input_form").val(amount);
+  // Setup currency button
+  $('#currencyButton').text(currency);
 
-        // get rate from bitcoin average every minute
+  // Setup pay button controller
+  let updatePayButton = function () {
+    if (RSBP.isOnline() && RSBP.isRateValid()) {
+      console.info("Enabling pay button");
+      $("#payButton").removeClass("disabled");
+    } else {
+      console.info("Disabling pay button");
+      $("#payButton").addClass("disabled");
+    }
+  };
+  updatePayButton();
+  window.addEventListener("connectivity", updatePayButton);
+  window.addEventListener("rate", updatePayButton);
 
-        var rate = 1;
-        if (currency != "BTC") {
-          setInterval((function() {
-              $.ajax("https://api.bitcoinaverage.com/ticker/"+currency+"/last").done(function(x) {
-                  rate = x * (1 + discount);
-                  $("#order").removeAttr("disabled");
-                  });
-              })(), 1000*60);
+  // Setup status controller
+  let firstOnline = false;
+  let firstRate = false;
+  let updateStatus = function () {
+    $(".status-div").addClass("invisible");
+    $(".status-div").removeClass("alert-info");
+    $(".status-div").removeClass("alert-warning");
+    $(".status-div").removeClass("alert-danger");
+    $(".status-content").text("");
+    if (!firstOnline || !firstRate) {
+      if (!firstOnline) {
+        if (RSBP.isOnline()) {
+          firstOnline = true;
+          if (!firstRate) {
+            if (RSBP.isRateValid()) {
+              firstRate = true;
+            } else {
+              $(".status-div").removeClass("invisible");
+              $(".status-div").addClass("alert-info");
+              $(".status-content").text("Getting the exchange rate...");
+            }
+          }
         } else {
-          $("#order").removeAttr("disabled");
+          $(".status-div").removeClass("invisible");
+          $(".status-div").addClass("alert-info");
+          $(".status-content").text("Connecting...");
         }
+      } else {
+        if (RSBP.isRateValid()) {
+          firstRate = true;
+        } else {
+          $(".status-div").removeClass("invisible");
+          $(".status-div").addClass("alert-info");
+          $(".status-content").text("Getting the exchange rate...");
+        }
+      }
+    } else if (!RSBP.isOnline()) {
+      $(".status-div").removeClass("invisible");
+      $(".status-div").addClass("alert-danger");
+      $(".status-content").text("Disconnected. Reconnecting...");
+    } else if (!RSBP.isRateValid()) {
+      $(".status-div").removeClass("invisible");
+      $(".status-div").addClass("alert-warning");
+      $(".status-content").text("Exchange rate expired. Getting a new one...");
+    }
+  };
+  updateStatus();
+  window.addEventListener("connectivity", updateStatus);
+  window.addEventListener("rate", updateStatus);
 
-        $("#order").click(function(e){
+  // Setup currency amount input field
+  $("#currencyAmountInputField").val(amount);
+
+        $("#payButton").click(function(e){
             var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
 
-            amount = $("#input_form").val();
+            let rate = RSBP.getRate();
+            amount = $("#currencyAmountInputField").val();
             if (payeeName) {
               var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+payeeName;
             } else {
@@ -115,84 +165,91 @@ $(document).ready(function() {
                 $("#myModalLabel").text("Waiting for payment");
                 },1000);
 
-            var initial_balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
-            var blockchain_check = setInterval(function() {
-                    balance = RESTget("https://blockchain.info/q/addressbalance/"+address+"?cors=true");
-                    if (balance > initial_balance) {
-                      if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
-                        clearInterval(blockchain_check);
-                        clearInterval(ellipsis);
-                        $("#myModalLabel").text();
-                        $("#myModalLabel").append('<div class="alert alert-success"><strong>Success!</strong> The payment has been received.</div>');
-                      } else {
-                        clearInterval(blockchain_check);
-                        clearInterval(ellipsis);
-                        $("#myModalLabel").text("Amount received is insufficient");
+            RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
+              var initial_balance = JSON.parse(body);
+              var blockchain_check = setInterval(function() {
+                      RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
+                        var balance = JSON.parse(body);
+                        if (balance > initial_balance) {
+                          if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
+                            clearInterval(blockchain_check);
+                            clearInterval(ellipsis);
+                            $("#myModalLabel").text();
+                            $("#myModalLabel").append('<div class="alert alert-success"><strong>Success!</strong> The payment has been received.</div>');
+                          } else {
+                            clearInterval(blockchain_check);
+                            clearInterval(ellipsis);
+                            $("#myModalLabel").text("Amount received is insufficient");
 
-                        // close after modal 1 s
-                        setTimeout(function(){$("#close-model").trigger('click');}, 1000);
-                        $("#input_form").val(amount/rate - rate*(balance - initial_balance));
-                        $("#order").trigger('click')
-                      }
-                    }
+                            // close after modal 1 s
+                            setTimeout(function(){$("#close-model").trigger('click');}, 1000);
+                            $("#currencyAmountInputField").val(amount/rate - rate*(balance - initial_balance));
+                            $("#payButton").trigger('click')
+                          }
+                        }
+                      });
                     }, 5*1000);
-
+            });
          });
 
-        // interpret <enter> keypress as click on the 'order' button
-        $('#input_form').keyup(function (e) {
-                if(e.which == 13) {
-                $('#order').trigger('click');
-                }
-                });
+         // interpret <enter> keypress as click on the 'order' button
+         $('#currencyAmountInputField').keyup(function (e) {
+                 if(e.which == 13) {
+                 $('#payButton').trigger('click');
+                 }
+                 });
 
-        $("#close-modal").click(function(e){
-                clearInterval(blockchain_check);
-                });
-        $('#payment_confirmation').on('hidden.bs.modal', function () {
-                clearInterval(blockchain_check);
-                });
+         $("#close-modal").click(function(e){
+                 clearInterval(blockchain_check);
+                 });
+         $('#payment_confirmation').on('hidden.bs.modal', function () {
+                 clearInterval(blockchain_check);
+                 });
 });
 </script>
 
 </head>
 <body>
-<!-- Modal -->
-<div class="modal fade" id="payment_confirmation" tabindex="-1" role="dialog"
-    aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
-      </div>
-      <div id="menu_list" class="modal-body">
-          <div id="invoiceid"></div>
-          <div id="exchange_rate"></div>
-          <div id="total_price"></div>
-          <div id="qrcode" align="middle"></div>
-          <a id="qrcode-text" align="middle"></a>
+  <!-- Modal -->
+  <div class="modal fade" id="payment_confirmation" tabindex="-1" role="dialog"
+      aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
+        </div>
+        <div id="menu_list" class="modal-body">
+            <div id="invoiceid"></div>
+            <div id="exchange_rate"></div>
+            <div id="total_price"></div>
+            <div id="qrcode" align="middle"></div>
+            <a id="qrcode-text" align="middle"></a>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div id="order_form">
-    <center><h1><img height="250" width="250"src="img/logo.png" alt="Bitcoin Payment"</h1><h1>Payment Request<a rel="license"
-     href="https://www.gnu.org/copyleft/gpl.html"></a>
-</p>
-    </h1></center>
+  <div id="order_form">
+    <center>
+      <img height="250" width="250"src="img/logo.png" alt="Bitcoin Payment">
+      <h1>Payment Request</h1>
+    </center>
     <div class="input-group">
-        <span class="input-group-btn">
-            <button id="currency" type="button" class="btn btn-default"></button>
-        </span>
-
-        <input type="number" id="input_form" class="form-control" placeholder="0">
-        <span class="input-group-btn">
-            <button id="order" disabled type="button" class="btn btn-primary">Pay</button>
-        </span>
+      <span class="input-group-btn">
+        <button id="currencyButton" type="button" class="btn btn-default disabled"></button>
+      </span>
+      <input id="currencyAmountInputField" type="number" class="form-control" placeholder="0">
+      <span class="input-group-btn">
+        <button id="payButton" type="button" class="btn btn-primary">Pay</button>
+      </span>
     </div>
     <div id="order_amount" align="middle"></div>
-    <div style="margin-bottom: 20%;"></div>
-</div>
+    <div style="margin-bottom: 20%; margin-top: 15px;">
+      <div class="status-div alert">
+        <span class="glyphicon glyphicon-exclamation-sign"></span>
+        <span class="status-content"></span>
+      </div>
+    </div>
+  </div>
 </body>
