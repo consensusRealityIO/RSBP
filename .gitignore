@@ -3,4 +3,5 @@
 
 # Ignore files created by package managers
 node_modules
+npm-debug.log
 app/bower_components
