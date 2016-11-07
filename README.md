@@ -25,3 +25,21 @@ or with parameters:
   
 3 minute How-to:
 https://www.youtube.com/watch?v=Obe2nyewab4
+
+## Installation
+
+### Development ###
+
+```sh
+npm install
+```
+
+This will install the linters used by `RSBP` and run `bower install`. You can then check the code against the style rules by running `npm run-script lint`.
+
+### Deployment ###
+
+```sh
+bower install
+```
+
+This will install the required client-side libraries in `app/bower_components`. You can then deploy the `app` folder according to your web server configuration.

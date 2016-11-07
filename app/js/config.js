@@ -1,4 +1,7 @@
-(function (RSBP_CONFIG, window) {
+/* global window */
+/* global RSBP_CONFIG */
+
+(function () {
 
   "use strict";
 
@@ -26,4 +29,4 @@
 
   RSBP_CONFIG.payee = loadMerchantConfiguration();
 
-}(RSBP_CONFIG, window));
+}());

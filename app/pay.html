@@ -1,255 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head lang="en">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<!doctype html>
-<head>
+    <title>Real Simple Bitcoin Payment</title>
 
-<!--This is the title that will appear on the tab-->
-<title>Real Simple Bitcoin Payment</title>
+    <link href="img/favicon.png" rel="icon" type="image/png"/>
+    <link href="img/apple-touch-icon.png" rel="apple-touch-icon" type="image/png"/>
+    <link href="img/apple-touch-icon.png" rel="apple-touch-icon-precomposed" type="image/png"/>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="apple-touch-icon" href="img/apple-touch-icon.png"/>
-<link rel="apple-touch-icon-precomposed" href="img/apple-touch-icon.png"/>
-<link rel="icon" type="image/png" href="img/favicon.png">
-
-<style>
-html, body {
-    height: 100%;
-}
-
-html {
-    display: table;
-    margin: auto;
-}
-
-body {
-    display: table-cell;
-    vertical-align: middle;
-}
-
-.input-group {
-    width: 100%;
-}
-
-div {text-align: center; margin:auto;}
-</style>
-
-<script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
-<script src="config.js"></script>
-<script src="js/config.js"></script>
-<script src="js/connector.js"></script>
-<script src="js/rate.js"></script>
-
-<script>
-if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){
-    document.querySelector('meta[name=viewport]')
-      .setAttribute(
-        'content',
-        'initial-scale=1.0001, minimum-scale=1.0001, maximum-scale=1.0001, user-scalable=no'
-      );
-  }
-
-$(document).ready(function() {
-
-  var payeeName = RSBP_CONFIG.payee.name;
-  var address = RSBP_CONFIG.payee.address;
-  var currency = RSBP_CONFIG.payee.currency;
-  var amount = RSBP_CONFIG.payee.amount;
-  var discount = RSBP_CONFIG.payee.discount;
-
-  // Setup currency button
-  $('#currencyButton').text(currency);
-
-  // Setup pay button controller
-  let updatePayButton = function () {
-    if (RSBP.isOnline() && RSBP.isRateValid()) {
-      console.info("Enabling pay button");
-      $("#payButton").removeClass("disabled");
-    } else {
-      console.info("Disabling pay button");
-      $("#payButton").addClass("disabled");
-    }
-  };
-  updatePayButton();
-  window.addEventListener("connectivity", updatePayButton);
-  window.addEventListener("rate", updatePayButton);
-
-  // Setup status controller
-  let firstOnline = false;
-  let firstRate = false;
-  let updateStatus = function () {
-    $(".status-div").addClass("invisible");
-    $(".status-div").removeClass("alert-info");
-    $(".status-div").removeClass("alert-warning");
-    $(".status-div").removeClass("alert-danger");
-    $(".status-content").text("");
-    if (!firstOnline || !firstRate) {
-      if (!firstOnline) {
-        if (RSBP.isOnline()) {
-          firstOnline = true;
-          if (!firstRate) {
-            if (RSBP.isRateValid()) {
-              firstRate = true;
-            } else {
-              $(".status-div").removeClass("invisible");
-              $(".status-div").addClass("alert-info");
-              $(".status-content").text("Getting the exchange rate...");
-            }
-          }
-        } else {
-          $(".status-div").removeClass("invisible");
-          $(".status-div").addClass("alert-info");
-          $(".status-content").text("Connecting...");
-        }
-      } else {
-        if (RSBP.isRateValid()) {
-          firstRate = true;
-        } else {
-          $(".status-div").removeClass("invisible");
-          $(".status-div").addClass("alert-info");
-          $(".status-content").text("Getting the exchange rate...");
-        }
-      }
-    } else if (!RSBP.isOnline()) {
-      $(".status-div").removeClass("invisible");
-      $(".status-div").addClass("alert-danger");
-      $(".status-content").text("Disconnected. Reconnecting...");
-    } else if (!RSBP.isRateValid()) {
-      $(".status-div").removeClass("invisible");
-      $(".status-div").addClass("alert-warning");
-      $(".status-content").text("Exchange rate expired. Getting a new one...");
-    }
-  };
-  updateStatus();
-  window.addEventListener("connectivity", updateStatus);
-  window.addEventListener("rate", updateStatus);
-
-  // Setup currency amount input field
-  $("#currencyAmountInputField").val(amount);
-
-        $("#payButton").click(function(e){
-            var invoiceID = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
-
-            let rate = RSBP.getRate();
-            amount = $("#currencyAmountInputField").val();
-            if (payeeName) {
-              var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8)+'&message=invoice'+invoiceID+'&label='+payeeName;
-            } else {
-              var payment_uri = 'bitcoin:'+address+'?amount='+(amount/rate).toFixed(8);
-            }
-            $('#qrcode').html("");  // reset from previous qrcode
-            $('#qrcode').qrcode(payment_uri);
-            $('#qrcode-text').text(payment_uri);
-            $('#qrcode-text').attr("href", payment_uri);
-
-            if (currency != "BTC") {
-              $('#exchange_rate').text('Rate 1 BTC = ' + rate.toLocaleString() + ' ' + currency);
-              $('#total_price').text('Total ' + amount.toLocaleString() + ' ' + currency + ' (' +
-                    (amount/rate).toFixed(8) + ' BTC)' );
-            } else {
-              $('#total_price').text('Total ' + amount.toLocaleString() + ' BTC');
-            }
-
-            $("#payment_confirmation").modal('toggle');
-
-            // waiting animation
-            $("#myModalLabel").text("Waiting for payment");
-            var ellipsis = setInterval(function(){
-                for (i = 1; i <= 3; i++) {
-                setTimeout(function() {
-                    $("#myModalLabel").append(".");
-                    }, i * 250);
-                }
-                $("#myModalLabel").text("Waiting for payment");
-                },1000);
-
-            RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
-              var initial_balance = JSON.parse(body);
-              var blockchain_check = setInterval(function() {
-                      RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
-                        var balance = JSON.parse(body);
-                        if (balance > initial_balance) {
-                          if ((balance - initial_balance - (amount/rate).toFixed(8)) > 0) {
-                            clearInterval(blockchain_check);
-                            clearInterval(ellipsis);
-                            $("#myModalLabel").text();
-                            $("#myModalLabel").append('<div class="alert alert-success"><strong>Success!</strong> The payment has been received.</div>');
-                          } else {
-                            clearInterval(blockchain_check);
-                            clearInterval(ellipsis);
-                            $("#myModalLabel").text("Amount received is insufficient");
-
-                            // close after modal 1 s
-                            setTimeout(function(){$("#close-model").trigger('click');}, 1000);
-                            $("#currencyAmountInputField").val(amount/rate - rate*(balance - initial_balance));
-                            $("#payButton").trigger('click')
-                          }
-                        }
-                      });
-                    }, 5*1000);
-            });
-         });
-
-         // interpret <enter> keypress as click on the 'order' button
-         $('#currencyAmountInputField').keyup(function (e) {
-                 if(e.which == 13) {
-                 $('#payButton').trigger('click');
-                 }
-                 });
-
-         $("#close-modal").click(function(e){
-                 clearInterval(blockchain_check);
-                 });
-         $('#payment_confirmation').on('hidden.bs.modal', function () {
-                 clearInterval(blockchain_check);
-                 });
-});
-</script>
-
-</head>
-<body>
-  <!-- Modal -->
-  <div class="modal fade" id="payment_confirmation" tabindex="-1" role="dialog"
-      aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" id="close-modal" class="reset-menu close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-          <h4 class="modal-title" id="myModalLabel">Waiting for payment...</h4>
-        </div>
-        <div id="menu_list" class="modal-body">
-            <div id="invoiceid"></div>
-            <div id="exchange_rate"></div>
-            <div id="total_price"></div>
+    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+  </head>
+  <body>
+    <!-- Modal -->
+    <div id="payment-confirmation" class="modal fade" tabindex="-1" role="dialog"
+        aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button id="close-modal" class="reset-menu close" type="button" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+            </button>
+            <h4 id="payment-confirmation-title" class="modal-title">Waiting for payment...</h4>
+          </div>
+          <div id="menu-list" class="modal-body">
+            <div id="invoice-id"></div>
+            <div id="exchange-rate"></div>
+            <div id="total-price"></div>
             <div id="qrcode" align="middle"></div>
             <a id="qrcode-text" align="middle"></a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="order_form">
-    <center>
-      <img height="250" width="250"src="img/logo.png" alt="Bitcoin Payment">
-      <h1>Payment Request</h1>
-    </center>
-    <div class="input-group">
-      <span class="input-group-btn">
-        <button id="currencyButton" type="button" class="btn btn-default disabled"></button>
-      </span>
-      <input id="currencyAmountInputField" type="number" class="form-control" placeholder="0">
-      <span class="input-group-btn">
-        <button id="payButton" type="button" class="btn btn-primary">Pay</button>
-      </span>
-    </div>
-    <div id="order_amount" align="middle"></div>
-    <div style="margin-bottom: 20%; margin-top: 15px;">
-      <div class="status-div alert">
-        <span class="glyphicon glyphicon-exclamation-sign"></span>
-        <span class="status-content"></span>
+    <div id="order-form">
+      <center>
+        <img id="logo" src="img/logo.png" alt="Bitcoin Payment"/>
+        <h1>Payment Request</h1>
+      </center>
+      <div class="input-group">
+        <span class="input-group-btn">
+          <button id="currency-button" class="btn btn-default" type="button" disabled></button>
+        </span>
+        <input id="currency-amount-input-field" class="form-control" type="number" placeholder="0"/>
+        <span class="input-group-btn">
+          <button id="pay-button" class="btn btn-primary" type="button">Pay</button>
+        </span>
+      </div>
+      <div id="order-amount" align="middle"></div>
+      <div id="status-component">
+        <div class="status-div alert">
+          <span class="glyphicon glyphicon-exclamation-sign"></span>
+          <span class="status-content"></span>
+        </div>
       </div>
     </div>
-  </div>
-</body>
+
+    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/connector.js"></script>
+    <script type="text/javascript" src="js/rate.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+  </body>
+</html>

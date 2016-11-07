@@ -1,4 +1,10 @@
-(function (RSBP, RSBP_CONFIG, window, $) {
+/* global window */
+/* global console */
+/* global Event */
+/* global RSBP_CONFIG */
+/* global RSBP */
+
+(function () {
 
   "use strict";
 
@@ -34,7 +40,7 @@
       rateReceivedTime = Date.now();
       window.dispatchEvent(rateEvent);
     });
-    jQXhr.fail(function (jQXhr, status, error) {
+    jQXhr.fail(function (jQXhr, status) {
       console.error("Conversion rate request failed with status " + status);
     });
   };
@@ -57,7 +63,7 @@
     }
   };
 
-  let validateRateInterval = null;
+  let validateRateInterval = null; // eslint-disable-line no-unused-vars
 
   let start = function () {
     if (!started) {
@@ -96,6 +102,4 @@
   RSBP.isRateValid = isRateValid;
   RSBP.getRate = getRate;
 
-  return RSBP;
-
-}(RSBP, RSBP_CONFIG, window, $));
+}());

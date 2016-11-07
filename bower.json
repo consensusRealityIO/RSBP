@@ -1,0 +1,9 @@
+{
+  "name": "rsbp",
+  "version": "0.1.0",
+  "description": "A POS system for Bitcoin payments",
+  "dependencies": {
+    "bootstrap": "^3.x",
+    "jquery": "^2.x"
+  }
+}

@@ -1,4 +1,12 @@
-var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
+/* global window */
+/* global console */
+/* global Event */
+/* global WebSocket */
+/* global XMLHttpRequest */
+/* global $ */
+/* global RSBP_CONFIG */
+
+var RSBP = (function (RSBP) {
 
   "use strict";
 
@@ -50,7 +58,7 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
 
     let checkConnectivityInterval = null;
 
-    webSocket.onopen = function(evt) {
+    webSocket.onopen = function() {
       console.info("WebSocket opened");
       pingInterval = window.setInterval(ping, TIMEOUT);
       ping();
@@ -58,7 +66,7 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
       doOnline();
     };
 
-    webSocket.onclose = function(evt) {
+    webSocket.onclose = function() {
       console.info("WebSocket closed");
       window.clearInterval(pingInterval);
       window.clearInterval(checkConnectivityInterval);
@@ -66,7 +74,7 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
       window.setTimeout(setupWebSocket, RECONNECT_INTERVAL);
     };
 
-    webSocket.onmessage = function(evt) {
+    webSocket.onmessage = function() {
       receivedTime = Date.now();
     };
 
@@ -79,14 +87,14 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
   };
 
   let fetch = function (url, callback) {
-      let xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState == XMLHttpRequest.DONE) {
-          callback(xhr.responseText, xhr.status);
-        }
-      };
-      xhr.open("GET", url);
-      xhr.send();
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState == XMLHttpRequest.DONE) {
+        callback(xhr.responseText, xhr.status);
+      }
+    };
+    xhr.open("GET", url);
+    xhr.send();
   };
 
   let ajax = function (url, useCorsProxy = false) {
@@ -105,4 +113,4 @@ var RSBP = (function (RSBP, RSBP_CONFIG, window, $) {
 
   return RSBP;
 
-}(RSBP || {}, RSBP_CONFIG, window, $));
+}(RSBP || {}));
