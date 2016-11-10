@@ -1,4 +1,3 @@
-/* global console */
 /* global window */
 /* global document */
 /* global $ */
@@ -15,20 +14,6 @@
 
     // Setup currency button
     $("#currency-button").text(currency);
-
-    // Setup pay button controller
-    let updatePayButton = function () {
-      if (RSBP.isOnline() && RSBP.isRateValid()) {
-        console.info("Enabling pay button");
-        $("#pay-button").removeClass("disabled");
-      } else {
-        console.info("Disabling pay button");
-        $("#pay-button").addClass("disabled");
-      }
-    };
-    updatePayButton();
-    window.addEventListener("connectivity", updatePayButton);
-    window.addEventListener("rate", updatePayButton);
 
     // Setup currency amount input field
     $("#currency-amount-input-field").val(amount);
