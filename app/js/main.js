@@ -6,10 +6,13 @@
   $(document).ready(function() {
 
     "use strict";
-    
+
+    let payeeName = RSBP_CONFIG.payee.name;
     let currency = RSBP_CONFIG.payee.currency;
     let amount = RSBP_CONFIG.payee.amount;
 
+    document.title = payeeName;
+    
     // Setup currency button
     $("#currency-button").text(currency);
 
