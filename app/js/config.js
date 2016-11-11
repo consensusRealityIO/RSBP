@@ -5,8 +5,8 @@
 
   "use strict";
 
-  var getQueryStringValue = function (name) {
-    var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(window.location.href);
+  let getQueryStringValue = function (name) {
+    let results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(window.location.href);
     if (results !== null){
       return results[1].replace("/", "") || 0;
     } else {
@@ -14,9 +14,9 @@
     }
   };
 
-  var loadMerchantConfiguration = function () {
-    var urlConfig = RSBP_CONFIG.system.urlConfig;
-    var config = {
+  let loadMerchantConfiguration = function () {
+    let urlConfig = RSBP_CONFIG.system.urlConfig;
+    let config = {
       "name": (urlConfig ? getQueryStringValue("name") : RSBP_CONFIG.payee.name) || "consensusReality",
       "address": (urlConfig ? getQueryStringValue("address") : RSBP_CONFIG.payee.address) || "1E16XPFWKY2XaFDDzS6V93hGdXP2QEnddY",
       "currency": (urlConfig ? getQueryStringValue("currency") : RSBP_CONFIG.payee.currency) || "BTC",

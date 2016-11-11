@@ -9,6 +9,7 @@
 
   let firstOnline = false;
   let firstRate = false;
+  
   let update = function () {
     $("#status-div").addClass("invisible");
     $("#status-div").removeClass("alert-info");

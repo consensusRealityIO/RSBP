@@ -9,12 +9,12 @@ var RSBP = (function (RSBP) {
 
   "use strict";
 
-  let TIMEOUT = RSBP_CONFIG.connector.timeout;
-  let RECONNECT_INTERVAL = RSBP_CONFIG.connector.reconnectInterval;
-  let CORS_PROXY = RSBP_CONFIG.connector.corsProxy;
+  const TIMEOUT = RSBP_CONFIG.connector.timeout;
+  const RECONNECT_INTERVAL = RSBP_CONFIG.connector.reconnectInterval;
+  const CORS_PROXY = RSBP_CONFIG.connector.corsProxy;
+  const CONNECTIVITY_EVENT = new Event("connectivity");
 
   let online = false;
-  let connectivityEvent = new Event("connectivity");
 
   let isOnline = function () {
     return online;
@@ -24,7 +24,7 @@ var RSBP = (function (RSBP) {
     if (!online) {
       online = true;
       console.info("App online");
-      window.dispatchEvent(connectivityEvent);
+      window.dispatchEvent(CONNECTIVITY_EVENT);
     }
   };
 
@@ -32,7 +32,7 @@ var RSBP = (function (RSBP) {
     if (online) {
       online = false;
       console.info("App offline");
-      window.dispatchEvent(connectivityEvent);
+      window.dispatchEvent(CONNECTIVITY_EVENT);
     }
   };
 

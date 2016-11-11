@@ -8,15 +8,15 @@
 
   "use strict";
 
-  let CURRENCY = RSBP_CONFIG.payee.currency;
-  let USE_CORS_PROXY = RSBP_CONFIG.rate.useCorsProxy;
-  let EXPIRATION = RSBP_CONFIG.rate.expiration;
-  let IS_BTC = CURRENCY === "BTC";
-  let URL = "https://api.bitcoinaverage.com/ticker/" + CURRENCY + "/last";
+  const CURRENCY = RSBP_CONFIG.payee.currency;
+  const USE_CORS_PROXY = RSBP_CONFIG.rate.useCorsProxy;
+  const EXPIRATION = RSBP_CONFIG.rate.expiration;
+  const IS_BTC = CURRENCY === "BTC";
+  const URL = "https://api.bitcoinaverage.com/ticker/" + CURRENCY + "/last";
+  const RATE_EVENT = new Event("rate");
 
   let rate = 1;
   let rateReceivedTime = null;
-  let rateEvent = new Event("rate");
   let lastValidation = false;
   let started = false;
 
@@ -36,7 +36,7 @@
       console.info("Conversion rate received: 1 BTC = " + data + " " + CURRENCY);
       rate = data;
       rateReceivedTime = Date.now();
-      window.dispatchEvent(rateEvent);
+      window.dispatchEvent(RATE_EVENT);
     });
     jQXhr.fail(function (jQXhr, status) {
       console.error("Conversion rate request failed with status " + status);
@@ -50,13 +50,13 @@
       if (!lastValidation) {
         console.info("Rate is now valid");
         lastValidation = true;
-        window.dispatchEvent(rateEvent);
+        window.dispatchEvent(RATE_EVENT);
       }
     } else {
       if (lastValidation) {
         console.info("Rate is now invalid");
         lastValidation = false;
-        window.dispatchEvent(rateEvent);
+        window.dispatchEvent(RATE_EVENT);
       }
     }
   };

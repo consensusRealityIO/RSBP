@@ -7,17 +7,17 @@
 
     "use strict";
 
-    let payeeName = RSBP_CONFIG.payee.name;
-    let currency = RSBP_CONFIG.payee.currency;
-    let amount = RSBP_CONFIG.payee.amount;
+    const PAYEE_NAME = RSBP_CONFIG.payee.name;
+    const CURRENCY = RSBP_CONFIG.payee.currency;
+    const AMOUNT = RSBP_CONFIG.payee.amount;
 
-    document.title = payeeName;
+    document.title = PAYEE_NAME;
 
     // Setup currency button
-    $("#currency-button").text(currency);
+    $("#currency-button").text(CURRENCY);
 
     // Setup currency amount input field
-    $("#currency-amount-input-field").val(amount);
+    $("#currency-amount-input-field").val(AMOUNT);
     $("#currency-amount-input-field").keyup(function (evt) {
       if (evt.which == 13) { // "Enter" key
         $("#pay-button").trigger("click");
