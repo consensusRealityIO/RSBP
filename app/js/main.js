@@ -12,11 +12,16 @@
     let amount = RSBP_CONFIG.payee.amount;
 
     document.title = payeeName;
-    
+
     // Setup currency button
     $("#currency-button").text(currency);
 
     // Setup currency amount input field
     $("#currency-amount-input-field").val(amount);
+    $("#currency-amount-input-field").keyup(function (evt) {
+      if (evt.code == "Enter") {
+        $("#pay-button").trigger("click");
+      }
+    });
   });
 }());

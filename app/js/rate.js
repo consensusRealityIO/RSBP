@@ -9,7 +9,6 @@
   "use strict";
 
   let CURRENCY = RSBP_CONFIG.payee.currency;
-  let DISCOUNT = RSBP_CONFIG.payee.discount;
   let USE_CORS_PROXY = RSBP_CONFIG.rate.useCorsProxy;
   let EXPIRATION = RSBP_CONFIG.rate.expiration;
   let IS_BTC = CURRENCY === "BTC";
@@ -34,9 +33,8 @@
     console.info("Sending conversion rate request to " + URL);
     let jQXhr = RSBP.ajax(URL, USE_CORS_PROXY);
     jQXhr.done(function (data) {
-      console.info("Conversion rate received: " + data + " " + CURRENCY + "/BTC");
-      rate = data * (1 + (DISCOUNT / 100));
-      console.info("Conversion rate with discount of " + DISCOUNT + "%: " + rate + " " + CURRENCY + "/BTC");
+      console.info("Conversion rate received: 1 BTC = " + data + " " + CURRENCY);
+      rate = data;
       rateReceivedTime = Date.now();
       window.dispatchEvent(rateEvent);
     });

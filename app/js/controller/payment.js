@@ -1,5 +1,7 @@
+/* global console */
 /* global window */
 /* global document */
+/* global Event */
 /* global $ */
 /* global RSBP_CONFIG */
 /* global RSBP */
@@ -8,87 +10,267 @@
 
   "use strict";
 
-  let payeeName = RSBP_CONFIG.payee.name;
-  let address = RSBP_CONFIG.payee.address;
-  let currency = RSBP_CONFIG.payee.currency;
-  let amount = RSBP_CONFIG.payee.amount;
+  const ADDRESS = RSBP_CONFIG.payee.address;
+  const PAYEE_NAME = RSBP_CONFIG.payee.name;
+  const CURRENCY = RSBP_CONFIG.payee.currency;
+  const BTC_DECIMALS = 8;
+  const CURRENCY_DECIMALS = (CURRENCY === "BTC") ? BTC_DECIMALS : 2;
+  const DISCOUNT = RSBP_CONFIG.payee.discount / 100;
+  const BALANCE_RECEIVED_EVENT = new Event("balance-received");
+  const BALANCE_STATUS_UPDATE_EVENT = new Event("balance-status-update");
+  const BALANCE_STATUS = {
+    INITIALIZING: 0,
+    WAITING: 1,
+    RESET: 2,
+    PAID: 3,
+    toString: function (index) {
+      switch (index) {
+      case 0:
+        return "INITIALIZING";
+      case 1:
+        return "WAITING";
+      case 2:
+        return "RESET";
+      case 3:
+        return "PAID";
+      default:
+        return null;
+      }
+    }
+  };
+
+  let invoice = null;
+  let initialBalance = null;
+  let balance = null;
+  let balanceStatus = null;
+
+  let getAmount = function () {
+    return ($("#currency-amount-input-field").val() * 1).toFixed(CURRENCY_DECIMALS);
+  };
+
+  let getDiscountAmount = function () {
+    return (getAmount() * DISCOUNT).toFixed(CURRENCY_DECIMALS);
+  };
+
+  let getDiscountedAmount = function () {
+    return (getAmount() * (1 - DISCOUNT)).toFixed(CURRENCY_DECIMALS);
+  };
+
+  let getDiscountedAmountBtc = function () {
+    return (getDiscountedAmount() / RSBP.getRate()).toFixed(BTC_DECIMALS);
+  };
+
+  let getBitcoinUri = function (invoiceId) {
+    return "bitcoin:" + ADDRESS + "?" +
+      "amount=" + getDiscountedAmountBtc() +
+      "&message=invoice" + invoiceId +
+      "&label=" + PAYEE_NAME;
+  };
+
+  let updateTitle = function () {
+    let text = "Invoice " + invoice.id;
+    $("#payment-modal-title").text(text);
+  };
+
+  let updateAmount = function () {
+    let value = invoice.amount.toLocaleString() + " " + invoice.currency;
+    $("#payment-modal-amount-value").text(value);
+  };
+
+  let updateDiscount = function () {
+    let text = "Discount " + invoice.discount.toLocaleString() + "%:";
+    let value = invoice.discountAmount.toLocaleString() + " " + invoice.currency;
+    $("#payment-modal-discount-text").text(text);
+    $("#payment-modal-discount-value").text(value);
+  };
+
+  let updateTotal = function () {
+    let valueCcy = invoice.discountedAmount.toLocaleString() + " " + invoice.currency;
+    $("#payment-modal-total-value-currency").text(valueCcy);
+    if (invoice.currency !== "BTC") {
+      let valueBtc = invoice.discountedAmountBtc.toLocaleString() + " BTC";
+      $("#payment-modal-total-value-btc").text(valueBtc);
+    }
+  };
+
+  let updateRate = function () {
+    if (invoice.currency === "BTC") {
+      $("#payment-modal-rate-tr").remove();
+    } else {
+      let value = "1 BTC = " + invoice.exchangeRate.toLocaleString() + " BTC";
+      $("#payment-modal-rate-value").text(value);
+    }
+  };
+
+  let updateQrCode = function () {
+    $("#payment-modal-qrcode").html(""); // reset
+    $("#payment-modal-qrcode").qrcode(invoice.bitcoinUri);
+  };
+
+  let createInvoice = function (invoiceId) {
+    return {
+      id: invoiceId,
+      payeeName: PAYEE_NAME,
+      address: ADDRESS,
+      currency: CURRENCY,
+      amount: getAmount(),
+      discount: DISCOUNT,
+      discountAmount: getDiscountAmount(),
+      discountedAmount: getDiscountedAmount(),
+      discountedAmountBtc: getDiscountedAmountBtc(),
+      exchangeRate: RSBP.getRate(),
+      bitcoinUri: getBitcoinUri(invoiceId),
+      paid: false
+    };
+  };
+
+  let updateInvoice = function () {
+    let invoiceId = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
+    invoice = createInvoice(invoiceId);
+    console.info("Created invoice " + invoiceId + ": " + JSON.stringify(invoice));
+    updateTitle();
+    updateAmount();
+    updateDiscount();
+    updateTotal();
+    updateRate();
+    updateQrCode();
+  };
+
+  let updateStatus = function () {
+    $("#payment-status-div").removeClass("alert-danger");
+    $("#payment-status-div").removeClass("alert-warning");
+    $("#payment-status-div").removeClass("alert-info");
+    $("#payment-status-div").removeClass("alert-success");
+    $("#payment-status-icon").removeClass("glyphicon-exclamation-sign");
+    $("#payment-status-icon").removeClass("glyphicon-refresh");
+    $("#payment-status-icon").removeClass("glyphicon-refresh-animate");
+    $("#payment-status-text").text("");
+    if (!RSBP.isOnline()) {
+      $("#payment-status-div").addClass("alert-danger");
+      $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
+      $("#payment-status-text").text("Disconnected. Reconnecting...");
+    } else if (balanceStatus === BALANCE_STATUS.INITIALIZING) {
+      $("#payment-status-div").addClass("alert-info");
+      $("#payment-status-icon").addClass("glyphicon-refresh");
+      $("#payment-status-icon").addClass("glyphicon-refresh-animate");
+      $("#payment-status-text").text("Retrieving initial address balance...");
+    } else if (balanceStatus === BALANCE_STATUS.WAITING) {
+      $("#payment-status-div").addClass("alert-info");
+      $("#payment-status-icon").addClass("glyphicon-refresh");
+      $("#payment-status-icon").addClass("glyphicon-refresh-animate");
+      $("#payment-status-text").text("Waiting for payment");
+    } else if (balanceStatus === BALANCE_STATUS.RESET) {
+      $("#payment-status-div").addClass("alert-warning");
+      $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
+      $("#payment-status-text").text("Another payment has been received. Waiting for payment...");
+    } else if (balanceStatus === BALANCE_STATUS.PAID) {
+      $("#payment-status-div").addClass("alert-success");
+      $("#payment-status-text").text("Payment received!");
+    }
+  };
+
+  let retrieveBalance = function () {
+    console.info("Retrieving balance...");
+    let uri = "https://blockchain.info/q/addressbalance/" + ADDRESS;
+    let jQXhr = RSBP.ajax(uri, false);
+    jQXhr.done(function (data) {
+      if (initialBalance === null) {
+        console.info("Initial balance retrieved: " + data + " satoshi");
+        initialBalance = data;
+      } else {
+        console.info("Balance retrieved: " + data + " satoshi");
+      }
+      balance = data;
+      window.dispatchEvent(BALANCE_RECEIVED_EVENT);
+    });
+    jQXhr.fail(function (jQXhr, status) {
+      console.error("Balance retrieval failed with error status " + status);
+    });
+  };
+
+  let retrieveBalanceInterval = null;
+
+  let startBalanceRetrieval = function () {
+    if (invoice !== null && retrieveBalanceInterval === null) {
+      console.info("Starting balance retrieval...");
+      retrieveBalance();
+      retrieveBalanceInterval = window.setInterval(retrieveBalance, 5 * 1000);
+    }
+  };
+
+  let stopBalanceRetrieval = function () {
+    if (invoice === null || retrieveBalanceInterval !== null) {
+      console.info("Stopping balance retrieval...");
+      window.clearInterval(retrieveBalanceInterval);
+      retrieveBalanceInterval = null;
+    }
+  };
+
+  let validateBalance = function () {
+    console.info("Validating balance...");
+    if (invoice !== null) {
+      if (initialBalance !== null) {
+        let diff = initialBalance - balance;
+        if (diff > 0) {
+          console.info("Address balance changed by " + (initialBalance - balance) + " satoshi");
+          let discountedAmountSatoshi = invoice.discountedAmountBtc * Math.pow(10, 8);
+          console.info("Invoice amount: " + discountedAmountSatoshi + " satoshi");
+          if (initialBalance - balance == discountedAmountSatoshi) {
+            console.info("Balance difference matches invoice amount. Assuming the payment went through...");
+            balanceStatus = BALANCE_STATUS.PAID;
+          } else {
+            console.info("Balance difference does not match invoice amount. Keep waiting...");
+            initialBalance = balance;
+            balanceStatus = BALANCE_STATUS.RESET;
+          }
+        } else {
+          balanceStatus = BALANCE_STATUS.WAITING;
+        }
+      } else {
+        balanceStatus = BALANCE_STATUS.INITIALIZING;
+      }
+      console.info("Balance status: " + BALANCE_STATUS.toString(balanceStatus));
+      window.dispatchEvent(BALANCE_STATUS_UPDATE_EVENT);
+    }
+  };
 
   $(document).ready(function () {
-    let blockChainCheckInterval = null;
+    // Modal controller
+    $("#payment-modal").on("hidden.bs.modal", function () {
+      invoice = null;
+    });
     $("#pay-button").click(function () {
-      let invoiceId = Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000;
-      let rate = RSBP.getRate();
-      amount = $("#currency-amount-input-field").val();
-      let paymentUri = "bitcoin:" + address + "?amount=" + (amount / rate).toFixed(8);
-      if (payeeName) {
-        paymentUri += "&message=invoice" + invoiceId + "&label=" + payeeName;
-      }
-      $("#qrcode").html(""); // reset qrcode
-      $("#qrcode").qrcode(paymentUri);
-      $("#qrcode-text").text(paymentUri);
-      $("#qrcode-text").attr("href", paymentUri);
+      updateInvoice();
+      updateStatus();
+      console.info("Showing payment modal...");
+      $("#payment-modal").modal("show");
+    });
 
-      if (currency !== "BTC") {
-        $("#exchange-rate").text("Rate 1 BTC = " + rate.toLocaleString() + " " + currency);
-        $("#total-price").text("Total " + amount.toLocaleString() + " " + currency + " (" +
-              (amount/rate).toFixed(8) + " BTC)" );
+    // Status controller
+    window.addEventListener("connectivity", updateStatus);
+
+    // Balance controller
+    $("#payment-modal").on("shown.bs.modal", function () {
+      initialBalance = null;
+      balanceStatus = null;
+      validateBalance();
+      startBalanceRetrieval();
+    });
+    $("#payment-modal").on("hidden.bs.modal", function () {
+      initialBalance = null;
+      balanceStatus = null;
+      stopBalanceRetrieval();
+    });
+    window.addEventListener("connectivity", function () {
+      if (RSBP.isOnline()) {
+        startBalanceRetrieval();
       } else {
-        $("#total-price").text("Total " + amount.toLocaleString() + " BTC");
-      }
-
-      $("#payment-confirmation").modal("toggle");
-
-      // waiting animation
-      $("#payment-confirmation-title").text("Waiting for payment");
-      let ellipsisInterval = window.setInterval(function(){
-        for (let i = 1; i <= 3; i++) {
-          window.setTimeout(function() {
-            $("#payment-confirmation-title").append(".");
-          }, i * 250);
-        }
-        $("#payment-confirmation-title").text("Waiting for payment");
-      }, 1000);
-
-      RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
-        let initialBalance = JSON.parse(body);
-        blockChainCheckInterval = window.setInterval(function() {
-          RSBP.fetch("https://blockchain.info/q/addressbalance/"+address+"?cors=true", function (body) {
-            let balance = JSON.parse(body);
-            if (balance > initialBalance) {
-              if ((balance - initialBalance - (amount/rate).toFixed(8)) > 0) {
-                window.clearInterval(blockChainCheckInterval);
-                window.clearInterval(ellipsisInterval);
-                $("#payment-confirmation-title").text();
-                $("#payment-confirmation-title").append("<div class=\"alert alert-success\"><strong>Success!</strong> The payment has been received.</div>");
-              } else {
-                window.clearInterval(blockChainCheckInterval);
-                window.clearInterval(ellipsisInterval);
-                $("#payment-confirmation-title").text("Amount received is insufficient");
-
-                // close modal after 1 second
-                window.setTimeout(function(){$("#close-model").trigger("click");}, 1000);
-                $("#currency-amount-input-field").val(amount / rate - rate * (balance - initialBalance));
-                $("#pay-button").trigger("click");
-              }
-            }
-          });
-        }, 5 * 1000);
-      });
-    });
-
-    // interpret <enter> keypress as click on the order button
-    $("#currency-amount-input-field").keyup(function (evt) {
-      if (evt.which == 13) {
-        $("#pay-button").trigger("click");
+        stopBalanceRetrieval();
       }
     });
 
-    $("#close-modal").click(function(){
-      window.clearInterval(blockChainCheckInterval);
-    });
-
-    $("#payment-confirmation").on("hidden.bs.modal", function () {
-      window.clearInterval(blockChainCheckInterval);
-    });
+    // Balance validation
+    window.addEventListener("balance-received", validateBalance);
+    window.addEventListener("balance-status-update", updateStatus);
   });
 }());

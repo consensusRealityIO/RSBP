@@ -2,7 +2,6 @@
 /* global console */
 /* global Event */
 /* global WebSocket */
-/* global XMLHttpRequest */
 /* global $ */
 /* global RSBP_CONFIG */
 
@@ -86,17 +85,6 @@ var RSBP = (function (RSBP) {
     };
   };
 
-  let fetch = function (url, callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState == XMLHttpRequest.DONE) {
-        callback(xhr.responseText, xhr.status);
-      }
-    };
-    xhr.open("GET", url);
-    xhr.send();
-  };
-
   let ajax = function (url, useCorsProxy = false) {
     if (useCorsProxy) {
       url = CORS_PROXY + url;
@@ -108,7 +96,6 @@ var RSBP = (function (RSBP) {
   setupWebSocket();
 
   RSBP.isOnline = isOnline;
-  RSBP.fetch = fetch; // for backward compatibility
   RSBP.ajax = ajax;
 
   return RSBP;
