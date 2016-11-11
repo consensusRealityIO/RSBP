@@ -75,7 +75,8 @@
         </span>
         <input id="currency-amount-input-field" class="form-control" type="number" placeholder="0"/>
         <span class="input-group-btn">
-          <button id="pay-button" class="btn btn-primary" type="button">Pay</button>
+          <button id="pay-button" class="btn btn-primary" type="button"
+            data-toggle="modal" data-target="#payment-modal">Pay</button>
         </span>
       </div>
       <div id="order-amount" align="middle"></div>
@@ -96,6 +97,7 @@
     <script type="text/javascript" src="js/rate.js"></script>
     <script type="text/javascript" src="js/controller/status.js"></script>
     <script type="text/javascript" src="js/controller/pay-button.js"></script>
+    <script type="text/javascript" src="js/controller/invoice.js"></script>
     <script type="text/javascript" src="js/controller/payment.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
   </body>
