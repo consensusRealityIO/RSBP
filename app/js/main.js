@@ -19,7 +19,7 @@
     // Setup currency amount input field
     $("#currency-amount-input-field").val(amount);
     $("#currency-amount-input-field").keyup(function (evt) {
-      if (evt.code == "Enter") {
+      if (evt.which == 13) { // "Enter" key
         $("#pay-button").trigger("click");
       }
     });
