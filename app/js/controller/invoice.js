@@ -11,7 +11,7 @@
   const CURRENCY = RSBP_CONFIG.payee.currency;
   const BTC_DECIMALS = 8;
   const CURRENCY_DECIMALS = (CURRENCY === "BTC") ? BTC_DECIMALS : 2;
-  const DISCOUNT = RSBP_CONFIG.payee.discount / 100;
+  const DISCOUNT = RSBP_CONFIG.payee.discount;
 
   let invoice = null;
 
