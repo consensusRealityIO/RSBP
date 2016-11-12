@@ -6,6 +6,8 @@
 
 (function () {
 
+  "use strict";
+
   const ADDRESS = RSBP_CONFIG.payee.address;
   const PAYEE_NAME = RSBP_CONFIG.payee.name;
   const CURRENCY = RSBP_CONFIG.payee.currency;
@@ -28,7 +30,7 @@
   };
 
   let getDiscountedAmountBtc = function () {
-    return (getDiscountedAmount() / RSBP.getRate()).toFixed(BTC_DECIMALS);
+    return (getDiscountedAmount() / RSBP.rate.get()).toFixed(BTC_DECIMALS);
   };
 
   let getBitcoinUri = function (invoiceId) {
@@ -89,7 +91,7 @@
       discountAmount: getDiscountAmount(),
       discountedAmount: getDiscountedAmount(),
       discountedAmountBtc: getDiscountedAmountBtc(),
-      exchangeRate: RSBP.getRate(),
+      exchangeRate: RSBP.rate.get(),
       bitcoinUri: getBitcoinUri(invoiceId)
     };
   };
@@ -106,18 +108,22 @@
     updateQrCode();
   };
 
-  let getInvoice = function () {
+  let get = function () {
     return invoice;
   };
 
-  RSBP.getInvoice = getInvoice;
+  RSBP.invoice = {
+    get: get
+  };
 
   $(document).ready(function () {
+    console.info("Initializing invoice controller...");
     $("#payment-modal").on("show.bs.modal", function () {
       update();
     });
     $("#payment-modal").on("hidden.bs.modal", function () {
       invoice = null;
     });
+    console.info("Invoice controller initialized");
   });
 }());

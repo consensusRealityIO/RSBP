@@ -1,6 +1,7 @@
 /* global document */
 /* global $ */
 /* global RSBP_CONFIG */
+/* global RSBP */
 
 (function () {
   $(document).ready(function() {
@@ -23,5 +24,9 @@
         $("#pay-button").trigger("click");
       }
     });
+
+    // Start services
+    RSBP.connector.start();
+    RSBP.rate.start();
   });
 }());

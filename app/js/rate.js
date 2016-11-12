@@ -17,87 +17,96 @@
 
   let rate = 1;
   let rateReceivedTime = null;
-  let lastValidation = false;
-  let started = false;
+  let lastValid = null;
+  let enabled = false;
 
-  let isRateValid = function () {
+  let isValid = function () {
     return IS_BTC ||
       (rateReceivedTime !== null && Math.abs(Date.now() - rateReceivedTime) <= EXPIRATION);
   };
 
-  let getRate = function () {
-    return isRateValid() ? rate : null;
+  let get = function () {
+    return isValid() ? rate : null;
   };
 
-  let fetchRate = function () {
-    console.info("Sending conversion rate request to " + URL);
-    let jQXhr = RSBP.ajax(URL, USE_CORS_PROXY);
+  let fetch = function () {
+    console.info("Sending exchange rate request to " + URL);
+    let jQXhr = RSBP.connector.ajax(URL, USE_CORS_PROXY);
     jQXhr.done(function (data) {
-      console.info("Conversion rate received: 1 BTC = " + data + " " + CURRENCY);
+      console.info("Exchange rate received: 1 BTC = " + data + " " + CURRENCY);
       rate = data;
       rateReceivedTime = Date.now();
       window.dispatchEvent(RATE_EVENT);
     });
     jQXhr.fail(function (jQXhr, status) {
-      console.error("Conversion rate request failed with status " + status);
+      console.error("Exchange rate request failed with status " + status);
     });
   };
 
-  let fetchRateInterval = null;
+  let fetchInterval = null;
 
-  let validateRate = function () {
-    if (isRateValid()) {
-      if (!lastValidation) {
-        console.info("Rate is now valid");
-        lastValidation = true;
+  let validate = function () {
+    if (isValid()) {
+      console.info("Exchange rate is valid");
+      if (lastValid === null || !lastValid) {
+        lastValid = true;
         window.dispatchEvent(RATE_EVENT);
       }
     } else {
-      if (lastValidation) {
-        console.info("Rate is now invalid");
-        lastValidation = false;
+      console.info("Exchange rate is invalid");
+      if (lastValid !== null && lastValid) {
+        lastValid = false;
         window.dispatchEvent(RATE_EVENT);
       }
     }
   };
 
-  let validateRateInterval = null; // eslint-disable-line no-unused-vars
+  let validateInterval = null; // eslint-disable-line no-unused-vars
 
-  let start = function () {
-    if (!started) {
-      console.info("Starting rate connector...");
-      fetchRate();
-      fetchRateInterval = window.setInterval(fetchRate, EXPIRATION / 2);
-      validateRate();
-      validateRateInterval = window.setInterval(validateRate, EXPIRATION / 2);
-      started = true;
+  let enable = function () {
+    if (!enabled) {
+      console.info("Enabling exchange rate service...");
+      fetch();
+      fetchInterval = window.setInterval(fetch, EXPIRATION / 2);
+      validate();
+      validateInterval = window.setInterval(validate, EXPIRATION / 2);
+      enabled = true;
     }
   };
 
-  let stop = function () {
-    if (started) {
-      console.info("Stopping rate connector...");
-      window.clearInterval(fetchRateInterval);
-      // we don't clear validateRateInterval, as the rate may be valid even if
-      // the system is offline
-      started = false;
+  let disable = function () {
+    if (enabled) {
+      console.info("Disabling exchange rate service...");
+      window.clearInterval(fetchInterval);
+      // we don't clear validateInterval, as the rate may be valid even if
+      // the system is disabled
+      enabled = false;
     }
   };
 
-  if (!IS_BTC) {
-    if (RSBP.isOnline()) {
-      start();
-    }
-    window.addEventListener("connectivity", function () {
-      if (RSBP.isOnline()) {
-        start();
-      } else {
-        stop();
+  let startComponent = function () {
+    console.info("Starting exchange rate service...");
+    if (!IS_BTC) {
+      if (RSBP.connector.isOnline()) {
+        enable();
       }
-    });
-  }
+      window.addEventListener("connectivity", function () {
+        if (RSBP.connector.isOnline()) {
+          enable();
+        } else {
+          disable();
+        }
+      });
+    } else {
+      console.info("Exchange rate is valid and fixed at 1 BTC = 1 BTC");
+    }
+    console.info("Exchange rate service started");
+  };
 
-  RSBP.isRateValid = isRateValid;
-  RSBP.getRate = getRate;
+  RSBP.rate = {
+    start: startComponent,
+    isValid: isValid,
+    get: get
+  };
 
 }());

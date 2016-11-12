@@ -47,7 +47,7 @@
     $("#payment-status-icon").removeClass("glyphicon-refresh");
     $("#payment-status-icon").removeClass("glyphicon-refresh-animate");
     $("#payment-status-text").text("");
-    if (!RSBP.isOnline()) {
+    if (!RSBP.connector.isOnline()) {
       $("#payment-status-div").addClass("alert-danger");
       $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
       $("#payment-status-text").text("Disconnected. Reconnecting...");
@@ -74,7 +74,7 @@
   let retrieveBalance = function () {
     console.info("Retrieving balance...");
     let uri = "https://blockchain.info/q/addressbalance/" + ADDRESS;
-    let jQXhr = RSBP.ajax(uri, false);
+    let jQXhr = RSBP.connector.ajax(uri, false);
     jQXhr.done(function (data) {
       if (initialBalance === null) {
         console.info("Initial balance retrieved: " + data + " satoshi");
@@ -93,7 +93,7 @@
   let retrieveBalanceInterval = null;
 
   let startBalanceRetrieval = function () {
-    if (RSBP.getInvoice() !== null && retrieveBalanceInterval === null) {
+    if (RSBP.invoice.get() !== null && retrieveBalanceInterval === null) {
       console.info("Starting balance retrieval...");
       retrieveBalance();
       retrieveBalanceInterval = window.setInterval(retrieveBalance, 5 * 1000);
@@ -101,7 +101,7 @@
   };
 
   let stopBalanceRetrieval = function () {
-    if (RSBP.getInvoice() === null || retrieveBalanceInterval !== null) {
+    if (RSBP.invoice.get() === null || retrieveBalanceInterval !== null) {
       console.info("Stopping balance retrieval...");
       window.clearInterval(retrieveBalanceInterval);
       retrieveBalanceInterval = null;
@@ -110,12 +110,12 @@
 
   let validateBalance = function () {
     console.info("Validating balance...");
-    if (RSBP.getInvoice() !== null) {
+    if (RSBP.invoice.get() !== null) {
       if (initialBalance !== null) {
         let diff = initialBalance - balance;
         if (diff > 0) {
           console.info("Address balance changed by " + (initialBalance - balance) + " satoshi");
-          let discountedAmountSatoshi = RSBP.getInvoice().discountedAmountBtc * Math.pow(10, 8);
+          let discountedAmountSatoshi = RSBP.invoice.get().discountedAmountBtc * Math.pow(10, 8);
           console.info("Invoice amount: " + discountedAmountSatoshi + " satoshi");
           if (initialBalance - balance == discountedAmountSatoshi) {
             console.info("Balance difference matches invoice amount. Assuming the payment went through...");
@@ -156,7 +156,7 @@
       stopBalanceRetrieval();
     });
     window.addEventListener("connectivity", function () {
-      if (RSBP.isOnline()) {
+      if (RSBP.connector.isOnline()) {
         startBalanceRetrieval();
       } else {
         stopBalanceRetrieval();

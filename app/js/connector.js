@@ -23,7 +23,7 @@ var RSBP = (function (RSBP) {
   let doOnline = function () {
     if (!online) {
       online = true;
-      console.info("App online");
+      console.info("App is online");
       window.dispatchEvent(CONNECTIVITY_EVENT);
     }
   };
@@ -31,7 +31,7 @@ var RSBP = (function (RSBP) {
   let doOffline = function () {
     if (online) {
       online = false;
-      console.info("App offline");
+      console.info("App is offline");
       window.dispatchEvent(CONNECTIVITY_EVENT);
     }
   };
@@ -93,10 +93,18 @@ var RSBP = (function (RSBP) {
     return $.ajax(url);
   };
 
-  setupWebSocket();
+  let start = function () {
+    console.info("Starting connector service...");
+    setupWebSocket();
+    console.info("App is " + (isOnline() ? "online" : "offline"));
+    console.info("Connector service started");
+  };
 
-  RSBP.isOnline = isOnline;
-  RSBP.ajax = ajax;
+  RSBP.connector = {
+    start: start,
+    isOnline: isOnline,
+    ajax: ajax
+  };
 
   return RSBP;
 
