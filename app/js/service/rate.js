@@ -84,7 +84,7 @@
     }
   };
 
-  let startComponent = function () {
+  let start = function () {
     console.info("Starting exchange rate service...");
     if (!IS_BTC) {
       if (RSBP.connector.isOnline()) {
@@ -104,7 +104,7 @@
   };
 
   RSBP.rate = {
-    start: startComponent,
+    start: start,
     isValid: isValid,
     get: get
   };
