@@ -1,3 +1,4 @@
+/* global console */
 /* global document */
 /* global $ */
 /* global RSBP_CONFIG */
@@ -7,6 +8,8 @@
   $(document).ready(function() {
 
     "use strict";
+
+    console.info("Starting app...");
 
     const PAYEE_NAME = RSBP_CONFIG.payee.name;
     const CURRENCY = RSBP_CONFIG.payee.currency;
@@ -25,8 +28,18 @@
       }
     });
 
+    // Log payment modal state
+    $("#payment-modal").on("shown.bs.modal", function () {
+      console.info("Showing payment modal...");
+    });
+    $("#payment-modal").on("hidden.bs.modal", function () {
+      console.info("Payment modal hidden");
+    });
+
     // Start services
     RSBP.connector.start();
     RSBP.rate.start();
+
+    console.info("App started");
   });
 }());
