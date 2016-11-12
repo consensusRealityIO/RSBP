@@ -78,11 +78,11 @@
     jQXhr.done(function (data) {
       if (initialBalance === null) {
         console.info("Initial balance retrieved: " + data + " satoshi");
-        initialBalance = data;
+        initialBalance = data * 1; // data is a string
       } else {
         console.info("Balance retrieved: " + data + " satoshi");
       }
-      balance = data;
+      balance = data * 1; // data is a string
       window.dispatchEvent(BALANCE_RECEIVED_EVENT);
     });
     jQXhr.fail(function (jQXhr, status) {
@@ -112,14 +112,15 @@
     console.info("Validating balance...");
     if (RSBP.invoice.get() !== null) {
       if (initialBalance !== null) {
-        let diff = initialBalance - balance;
+        let diff = balance - initialBalance;
         if (diff > 0) {
-          console.info("Address balance changed by " + (initialBalance - balance) + " satoshi");
-          let discountedAmountSatoshi = RSBP.invoice.get().discountedAmountBtc * Math.pow(10, 8);
+          console.info("Address balance changed by " + diff + " satoshi");
+          let discountedAmountSatoshi = (RSBP.invoice.get().discountedAmountBtc * Math.pow(10, 8)).toFixed() * 1;
           console.info("Invoice amount: " + discountedAmountSatoshi + " satoshi");
-          if (initialBalance - balance == discountedAmountSatoshi) {
+          if (diff == discountedAmountSatoshi) {
             console.info("Balance difference matches invoice amount. Assuming the payment went through...");
             balanceStatus = BALANCE_STATUS.PAID;
+            stopBalanceRetrieval();
           } else {
             console.info("Balance difference does not match invoice amount. Keep waiting...");
             initialBalance = balance;
