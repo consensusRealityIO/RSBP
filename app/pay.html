@@ -16,27 +16,54 @@
   </head>
   <body>
     <!-- Modal -->
-    <div id="payment-confirmation" class="modal fade" tabindex="-1" role="dialog"
-        aria-labelledby="paymentConfirmationLabel" aria-hidden="true">
+    <div id="payment-modal" class="modal fade" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <button id="close-modal" class="reset-menu close" type="button" data-dismiss="modal">
-              <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+            <button id="payment-modal-close-button" class="close" type="button" data-dismiss="modal">
+              &times;
             </button>
-            <h4 id="payment-confirmation-title" class="modal-title">Waiting for payment...</h4>
+            <h4 id="payment-modal-title" class="modal-title"></h4>
           </div>
-          <div id="menu-list" class="modal-body">
-            <div id="invoice-id"></div>
-            <div id="exchange-rate"></div>
-            <div id="total-price"></div>
-            <div id="qrcode" align="middle"></div>
-            <a id="qrcode-text" align="middle"></a>
+          <div class="modal-body">
+            <div class="table-responsive">
+              <table class="table table-condensed table-bordered table-striped">
+                <tbody>
+                  <tr>
+                    <td class="text-left text-bold">Amount:</td>
+                    <td id="payment-modal-amount-value" class="text-right"></td>
+                  </tr>
+                  <tr>
+                    <td id="payment-modal-discount-text" class="text-left text-bold"></td>
+                    <td id="payment-modal-discount-value" class="text-right"></td>
+                  </tr>
+                  <tr>
+                    <td class="text-left text-bold">Total:</td>
+                    <td>
+                      <div id="payment-modal-total-value-currency" class="text-right"></div>
+                      <div id="payment-modal-total-value-btc" class="text-right"></div>
+                    </td>
+                  </tr>
+                  <tr id="payment-modal-rate-tr">
+                    <td class="text-left text-bold">Exchange rate:</td>
+                    <td id="payment-modal-rate-value" class="text-right"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="payment-modal-qrcode"></div>
+          </div>
+          <div class="modal-footer">
+            <div id="payment-status-div" class="alert">
+              <span id="payment-status-icon" class="glyphicon"></span>
+              <span id="payment-status-text"></span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- App -->
     <div id="order-form">
       <center>
         <img id="logo" src="img/logo.png" alt="Bitcoin Payment"/>
@@ -48,14 +75,15 @@
         </span>
         <input id="currency-amount-input-field" class="form-control" type="number" placeholder="0"/>
         <span class="input-group-btn">
-          <button id="pay-button" class="btn btn-primary" type="button">Pay</button>
+          <button id="pay-button" class="btn btn-primary" type="button"
+            data-toggle="modal" data-target="#payment-modal">Pay</button>
         </span>
       </div>
       <div id="order-amount" align="middle"></div>
-      <div id="status-component">
-        <div class="status-div alert">
-          <span class="glyphicon glyphicon-exclamation-sign"></span>
-          <span class="status-content"></span>
+      <div id="app-status-component">
+        <div id="app-status-div" class="alert">
+          <span id="app-status-icon" class="glyphicon"></span>
+          <span id="app-status-content"></span>
         </div>
       </div>
     </div>
@@ -65,8 +93,12 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript" src="js/config.js"></script>
-    <script type="text/javascript" src="js/connector.js"></script>
-    <script type="text/javascript" src="js/rate.js"></script>
+    <script type="text/javascript" src="js/service/connector.js"></script>
+    <script type="text/javascript" src="js/service/rate.js"></script>
+    <script type="text/javascript" src="js/controller/app-status.js"></script>
+    <script type="text/javascript" src="js/controller/pay-button.js"></script>
+    <script type="text/javascript" src="js/controller/invoice.js"></script>
+    <script type="text/javascript" src="js/controller/payment.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
   </body>
 </html>

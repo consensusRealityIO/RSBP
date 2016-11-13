@@ -2,7 +2,6 @@
 /* global console */
 /* global Event */
 /* global WebSocket */
-/* global XMLHttpRequest */
 /* global $ */
 /* global RSBP_CONFIG */
 
@@ -10,12 +9,12 @@ var RSBP = (function (RSBP) {
 
   "use strict";
 
-  let TIMEOUT = RSBP_CONFIG.connector.timeout;
-  let RECONNECT_INTERVAL = RSBP_CONFIG.connector.reconnectInterval;
-  let CORS_PROXY = RSBP_CONFIG.connector.corsProxy;
+  const TIMEOUT = RSBP_CONFIG.connector.timeout;
+  const RECONNECT_INTERVAL = RSBP_CONFIG.connector.reconnectInterval;
+  const CORS_PROXY = RSBP_CONFIG.connector.corsProxy;
+  const CONNECTIVITY_EVENT = new Event("connectivity");
 
   let online = false;
-  let connectivityEvent = new Event("connectivity");
 
   let isOnline = function () {
     return online;
@@ -24,16 +23,16 @@ var RSBP = (function (RSBP) {
   let doOnline = function () {
     if (!online) {
       online = true;
-      console.info("App online");
-      window.dispatchEvent(connectivityEvent);
+      console.info("App is online");
+      window.dispatchEvent(CONNECTIVITY_EVENT);
     }
   };
 
   let doOffline = function () {
     if (online) {
       online = false;
-      console.info("App offline");
-      window.dispatchEvent(connectivityEvent);
+      console.info("App is offline");
+      window.dispatchEvent(CONNECTIVITY_EVENT);
     }
   };
 
@@ -86,17 +85,6 @@ var RSBP = (function (RSBP) {
     };
   };
 
-  let fetch = function (url, callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState == XMLHttpRequest.DONE) {
-        callback(xhr.responseText, xhr.status);
-      }
-    };
-    xhr.open("GET", url);
-    xhr.send();
-  };
-
   let ajax = function (url, useCorsProxy = false) {
     if (useCorsProxy) {
       url = CORS_PROXY + url;
@@ -105,11 +93,18 @@ var RSBP = (function (RSBP) {
     return $.ajax(url);
   };
 
-  setupWebSocket();
+  let start = function () {
+    console.info("Starting connector service...");
+    setupWebSocket();
+    console.info("App is " + (isOnline() ? "online" : "offline"));
+    console.info("Connector service started");
+  };
 
-  RSBP.isOnline = isOnline;
-  RSBP.fetch = fetch; // for backward compatibility
-  RSBP.ajax = ajax;
+  RSBP.connector = {
+    start: start,
+    isOnline: isOnline,
+    ajax: ajax
+  };
 
   return RSBP;
 
