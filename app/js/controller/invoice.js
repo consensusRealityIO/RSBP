@@ -51,7 +51,7 @@
   };
 
   let updateDiscount = function () {
-    let text = invoice.discount.toLocaleString() + "% discount:";
+    let text = (invoice.discount * 100).toLocaleString() + "% discount:";
     let value = invoice.discountAmount.toLocaleString() + " " + invoice.currency;
     $("#payment-modal-discount-text").text(text);
     $("#payment-modal-discount-value").text(value);
