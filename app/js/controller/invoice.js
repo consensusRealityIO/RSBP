@@ -75,6 +75,10 @@
     }
   };
 
+  let updateAddress = function () {
+    $("#payment-modal-address-value").text(invoice.address);
+  };
+
   let updateQrCode = function () {
     $("#payment-modal-qrcode").html(""); // reset
     $("#payment-modal-qrcode").qrcode(invoice.bitcoinUri);
@@ -105,6 +109,7 @@
     updateDiscount();
     updateTotal();
     updateRate();
+    updateAddress();
     updateQrCode();
   };
 
