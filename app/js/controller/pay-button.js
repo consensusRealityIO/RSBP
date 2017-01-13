@@ -9,21 +9,17 @@
   "use strict";
 
   let update = function () {
-    let disabled = $("#pay-button").prop("disabled") || false;
-    if (RSBP.connector.isOnline() && RSBP.rate.isValid()) {
-      if (disabled) {
-        console.info("Enabling pay button");
-        $("#pay-button").prop("disabled", false);
-      }
-    } else if (!disabled) {
-      console.info("Disabling pay button");
-      $("#pay-button").prop("disabled", true);
-    }
+    let valid = $("#order-form")[0].checkValidity() &&
+                RSBP.connector.isOnline() &&
+                RSBP.rate.isValid();
+
+    $("#pay-button").prop("disabled", !valid);
   };
 
   $(document).ready(function () {
     console.info("Initializing pay button controller...");
     update();
+    $("#currency-amount-input-field").on("input", update);
     window.addEventListener("connectivity", update);
     window.addEventListener("rate", update);
     console.info("Pay button controller initialized");

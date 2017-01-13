@@ -37,8 +37,8 @@ var RSBP = (function (RSBP) {
   };
 
   let setupWebSocket = function () {
-
     let webSocket = new WebSocket("wss://echo.websocket.org/");
+
     let receivedTime = -1;
 
     let ping = function () {
