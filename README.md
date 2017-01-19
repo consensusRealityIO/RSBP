@@ -1,5 +1,7 @@
 # RSBP
 
+[![Build Status](https://travis-ci.org/{consensusRealityIO}/{RSBP}.png?branch=master)](https://travis-ci.org/{consensusRealityIO}/{RSPB})
+
 *Real Simple Bitcoin Payments*
 
 Real Simple Bitcoin Payments is a single webpage that facilitates bitcoin payments, converting a fiat currency amount into a real-time bitcoin amount, creating the QR code, and acknowledging payment on the blockchain.
