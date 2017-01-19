@@ -15,10 +15,7 @@ Parameters include:
 - `discount` - The discount percentage to be applied to the conversation rate
 
 You can see a running example implementation here:
-https://consensusreality.io/demo/app/pay.html
-
-Example with URL parameters:
-https://consensusreality.io/demo/app/pay.html?address=1Ho5zPf5zvtCiUcAQaazH2auDrQz1ovfF6&currency=USD&amount=0.50
+https://consensusreality.io/demo/RSBP/pay.html
 
 3 minute How-to:
 https://www.youtube.com/watch?v=Obe2nyewab4
