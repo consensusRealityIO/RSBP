@@ -48,6 +48,10 @@
                     <td class="text-left text-bold">Exchange rate:</td>
                     <td id="payment-modal-rate-value" class="text-right"></td>
                   </tr>
+                  <tr>
+                    <td class="text-left text-bold">Address:</td>
+                    <td id="payment-modal-address-value" class="text-right"></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -64,7 +68,7 @@
     </div>
 
     <!-- App -->
-    <div id="order-form">
+    <form id="order-form" action="javascript:void(0)">
       <center>
         <img id="logo" src="img/logo.png" alt="Bitcoin Payment"/>
         <h1>Payment Request</h1>
@@ -73,10 +77,9 @@
         <span class="input-group-btn">
           <button id="currency-button" class="btn btn-default" type="button" disabled></button>
         </span>
-        <input id="currency-amount-input-field" class="form-control" type="number" placeholder="0"/>
+        <input id="currency-amount-input-field" class="form-control" type="number" min="0.01" step="0.01" placeholder="amount" required/>
         <span class="input-group-btn">
-          <button id="pay-button" class="btn btn-primary" type="button"
-            data-toggle="modal" data-target="#payment-modal">Pay</button>
+          <input id="pay-button" class="btn btn-primary" type="submit" data-toggle="modal" data-target="#payment-modal" value="Pay"/>
         </span>
       </div>
       <div id="order-amount" align="middle"></div>
@@ -86,7 +89,7 @@
           <span id="app-status-content"></span>
         </div>
       </div>
-    </div>
+    </form>
 
     <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
     <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>

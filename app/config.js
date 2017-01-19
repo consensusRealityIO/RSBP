@@ -1,7 +1,7 @@
 let RSBP_CONFIG = { // eslint-disable-line no-unused-vars
   "system": {
     "urlConfig": false, // if 'true', load the the configuration from the URL
-                       // query string, else load it from RSBP_CONFIG.payee
+                        // query string, else load it from RSBP_CONFIG.payee
   },
   "connector": {
     "timeout": 2000, // in milliseconds
