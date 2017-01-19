@@ -1,6 +1,6 @@
 # RSBP
 
-[![Build Status](https://travis-ci.org/{consensusRealityIO}/{RSBP}.png?branch=master)](https://travis-ci.org/{consensusRealityIO}/{RSPB})
+[![Build Status](https://travis-ci.org/consensusRealityIO/RSBP.png?branch=master)](https://travis-ci.org/consensusRealityIO/RSPB)
 
 *Real Simple Bitcoin Payments*
 
