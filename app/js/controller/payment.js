@@ -37,6 +37,7 @@
   };
 
   let balanceStatus = null;
+  let recommendedFeePerByte = 0;
 
   let updateStatus = function () {
     $("#payment-status-div").removeClass("alert-danger");
@@ -65,21 +66,33 @@
       $("#payment-status-text").text("Payment received!");
     } else if (balanceStatus === BALANCE_STATUS.PAID_RBF) {
       $("#payment-status-div").addClass("alert-warning");
-      $("#payment-status-text").text("Replaceable transaction received. You should wait for this message to disappear before releasing the goods.");
+      $("#payment-status-text").text("Replaceable transaction received. You should wait for this message to disappear before releasing the goods, in about 10 minutes.");
     } else if (balanceStatus === BALANCE_STATUS.PAID_LOW_FEE) {
       $("#payment-status-div").addClass("alert-warning");
-      $("#payment-status-text").text("Low-fee transaction received. This might take a while to confirm.");
+      $("#payment-status-text").text("Low-fee transaction received. This might take a while to confirm, probably more than 20 minutes.");
     }
   };
 
   let retrieveBalance = function () {
     console.info("Retrieving address balance...");
-    let uri = "https://insight.bitpay.com/api/txs/?address=" + ADDRESS;
-    let jQXhr = RSBP.connector.ajax(uri, false);
 
     balanceStatus = BALANCE_STATUS.WAITING;
 
-    jQXhr.done(function (json) {
+    RSBP.connector.ajax(
+      "https://insight.bitpay.com/api/utils/estimatefee?nbBlocks=2"
+    )
+    .done(function (json) {
+      recommendedFeePerByte = json["2"] / 1000;
+      console.info("Recommended fee set to " + recommendedFeePerByte);
+    })
+    .fail(function (jQXhr, status) {
+      console.error("Fee retrieval failed with error status " + status);
+    });
+
+    RSBP.connector.ajax(
+      "https://insight.bitpay.com/api/txs/?address=" + ADDRESS
+    )
+    .done(function (json) {
       let invoice = RSBP.invoice.get();
       if (invoice === null) return;
 
@@ -98,7 +111,7 @@
       let validAmount = false;
       let outputs = lastTx.vout;
 
-      outputs.forEach(function(output) {
+      outputs.forEach(function (output) {
         if (output.scriptPubKey.addresses[0] == ADDRESS &&
             output.value == invoice.discountedAmountBtc) validAmount = true;
       });
@@ -108,6 +121,8 @@
 
         if (isRBF(lastTx) && lastTx.confirmations < 1) {
           balanceStatus = BALANCE_STATUS.PAID_RBF;
+        } else if (isLowFee(lastTx) && lastTx.confirmations < 1) {
+          balanceStatus = BALANCE_STATUS.PAID_LOW_FEE;
         } else {
           stopBalanceRetrieval();
           balanceStatus = BALANCE_STATUS.PAID;
@@ -119,9 +134,8 @@
 
       console.info("Balance status: " + BALANCE_STATUS.toString(balanceStatus));
       window.dispatchEvent(BALANCE_STATUS_UPDATE_EVENT);
-    });
-
-    jQXhr.fail(function (jQXhr, status) {
+    })
+    .fail(function (jQXhr, status) {
       console.error("Balance retrieval failed with error status " + status);
     });
   };
@@ -144,12 +158,12 @@
     }
   };
 
-  let isRBF = function(tx) {
+  let isRBF = function (tx) {
     let maxInt = 0xffffffff;
     let inputs = tx.vin;
     let rbf = false;
 
-    inputs.forEach(function(input) {
+    inputs.forEach(function (input) {
       if (input.sequence < maxInt) {
         console.info("RBF transaction detected");
         rbf = true;
@@ -157,6 +171,19 @@
     });
 
     return rbf;
+  };
+
+  let isLowFee = function (tx) {
+    let paidFee = tx.fees;
+    let recommendedFeeForTx = recommendedFeePerByte * tx.size;
+    let lowFee = paidFee < recommendedFeeForTx;
+
+    if (lowFee) {
+      console.info("Low-fee transaction detected " +
+                   "(" + paidFee + " < " + recommendedFeeForTx + ")");
+    }
+
+    return lowFee;
   };
 
   $(document).ready(function () {
