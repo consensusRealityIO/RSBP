@@ -11,31 +11,31 @@
   "use strict";
 
   const ADDRESS = RSBP_CONFIG.payee.address;
-  const BALANCE_RECEIVED_EVENT = new Event("balance-received");
   const BALANCE_STATUS_UPDATE_EVENT = new Event("balance-status-update");
   const BALANCE_STATUS = {
-    INITIALIZING: 0,
-    WAITING: 1,
-    RESET: 2,
-    PAID: 3,
+    WAITING: 0,
+    RESET: 1,
+    PAID: 2,
+    PAID_RBF: 3,
+    PAID_LOW_FEE: 4,
     toString: function (index) {
       switch (index) {
       case 0:
-        return "INITIALIZING";
-      case 1:
         return "WAITING";
-      case 2:
+      case 1:
         return "RESET";
-      case 3:
+      case 2:
         return "PAID";
+      case 3:
+        return "PAID_RBF";
+      case 4:
+        return "PAID_LOW_FEE";
       default:
         return null;
       }
     }
   };
 
-  let initialBalance = null;
-  let balance = null;
   let balanceStatus = null;
 
   let updateStatus = function () {
@@ -51,11 +51,6 @@
       $("#payment-status-div").addClass("alert-danger");
       $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
       $("#payment-status-text").text("Disconnected. Reconnecting...");
-    } else if (balanceStatus === BALANCE_STATUS.INITIALIZING) {
-      $("#payment-status-div").addClass("alert-info");
-      $("#payment-status-icon").addClass("glyphicon-refresh");
-      $("#payment-status-icon").addClass("glyphicon-refresh-animate");
-      $("#payment-status-text").text("Retrieving initial address balance...");
     } else if (balanceStatus === BALANCE_STATUS.WAITING) {
       $("#payment-status-div").addClass("alert-info");
       $("#payment-status-icon").addClass("glyphicon-refresh");
@@ -68,23 +63,64 @@
     } else if (balanceStatus === BALANCE_STATUS.PAID) {
       $("#payment-status-div").addClass("alert-success");
       $("#payment-status-text").text("Payment received!");
+    } else if (balanceStatus === BALANCE_STATUS.PAID_RBF) {
+      $("#payment-status-div").addClass("alert-warning");
+      $("#payment-status-text").text("Replaceable transaction received. You should wait for this message to disappear before releasing the goods.");
+    } else if (balanceStatus === BALANCE_STATUS.PAID_LOW_FEE) {
+      $("#payment-status-div").addClass("alert-warning");
+      $("#payment-status-text").text("Low-fee transaction received. This might take a while to confirm.");
     }
   };
 
   let retrieveBalance = function () {
-    console.info("Retrieving balance...");
-    let uri = "https://blockchain.info/q/addressbalance/" + ADDRESS;
+    console.info("Retrieving address balance...");
+    let uri = "https://insight.bitpay.com/api/txs/?address=" + ADDRESS;
     let jQXhr = RSBP.connector.ajax(uri, false);
-    jQXhr.done(function (data) {
-      if (initialBalance === null) {
-        console.info("Initial balance retrieved: " + data + " satoshi");
-        initialBalance = data * 1; // data is a string
-      } else {
-        console.info("Balance retrieved: " + data + " satoshi");
+
+    balanceStatus = BALANCE_STATUS.WAITING;
+
+    jQXhr.done(function (json) {
+      let invoice = RSBP.invoice.get();
+      if (invoice === null) return;
+
+      let lastTx = json.txs[0]; // most recent tx is first element
+
+      if (!lastTx) {
+        console.info("No transactions for this address yet");
+        return;
       }
-      balance = data * 1; // data is a string
-      window.dispatchEvent(BALANCE_RECEIVED_EVENT);
+
+      if (lastTx.time < invoice.time) {
+        console.debug("Found past transaction, ignoring it");
+        return;
+      }
+
+      let validAmount = false;
+      let outputs = lastTx.vout;
+
+      outputs.forEach(function(output) {
+        if (output.scriptPubKey.addresses[0] == ADDRESS &&
+            output.value == invoice.discountedAmountBtc) validAmount = true;
+      });
+
+      if (validAmount) {
+        console.info("Found valid amount");
+
+        if (isRBF(lastTx) && lastTx.confirmations < 1) {
+          balanceStatus = BALANCE_STATUS.PAID_RBF;
+        } else {
+          stopBalanceRetrieval();
+          balanceStatus = BALANCE_STATUS.PAID;
+        }
+      } else {
+        console.info("Keep waiting...");
+        balanceStatus = BALANCE_STATUS.RESET;
+      }
+
+      console.info("Balance status: " + BALANCE_STATUS.toString(balanceStatus));
+      window.dispatchEvent(BALANCE_STATUS_UPDATE_EVENT);
     });
+
     jQXhr.fail(function (jQXhr, status) {
       console.error("Balance retrieval failed with error status " + status);
     });
@@ -108,33 +144,19 @@
     }
   };
 
-  let validateBalance = function () {
-    console.info("Validating balance...");
-    if (RSBP.invoice.get() !== null) {
-      if (initialBalance !== null) {
-        let diff = balance - initialBalance;
-        if (diff > 0) {
-          console.info("Address balance changed by " + diff + " satoshi");
-          let discountedAmountSatoshi = (RSBP.invoice.get().discountedAmountBtc * Math.pow(10, 8)).toFixed() * 1;
-          console.info("Invoice amount: " + discountedAmountSatoshi + " satoshi");
-          if (diff == discountedAmountSatoshi) {
-            console.info("Balance difference matches invoice amount. Assuming the payment went through...");
-            balanceStatus = BALANCE_STATUS.PAID;
-            stopBalanceRetrieval();
-          } else {
-            console.info("Balance difference does not match invoice amount. Keep waiting...");
-            initialBalance = balance;
-            balanceStatus = BALANCE_STATUS.RESET;
-          }
-        } else {
-          balanceStatus = BALANCE_STATUS.WAITING;
-        }
-      } else {
-        balanceStatus = BALANCE_STATUS.INITIALIZING;
+  let isRBF = function(tx) {
+    let maxInt = 0xffffffff;
+    let inputs = tx.vin;
+    let rbf = false;
+
+    inputs.forEach(function(input) {
+      if (input.sequence < maxInt) {
+        console.info("RBF transaction detected");
+        rbf = true;
       }
-      console.info("Balance status: " + BALANCE_STATUS.toString(balanceStatus));
-      window.dispatchEvent(BALANCE_STATUS_UPDATE_EVENT);
-    }
+    });
+
+    return rbf;
   };
 
   $(document).ready(function () {
@@ -146,13 +168,10 @@
 
     // Balance controller
     $("#payment-modal").on("shown.bs.modal", function () {
-      initialBalance = null;
       balanceStatus = null;
-      validateBalance();
       startBalanceRetrieval();
     });
     $("#payment-modal").on("hidden.bs.modal", function () {
-      initialBalance = null;
       balanceStatus = null;
       stopBalanceRetrieval();
     });
@@ -165,7 +184,6 @@
     });
 
     // Balance validation
-    window.addEventListener("balance-received", validateBalance);
     window.addEventListener("balance-status-update", updateStatus);
   });
 }());

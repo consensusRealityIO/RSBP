@@ -85,6 +85,8 @@
   };
 
   let createInvoice = function (invoiceId) {
+    let now = Date.now() / 1000;
+
     return {
       id: invoiceId,
       payeeName: PAYEE_NAME,
@@ -96,7 +98,8 @@
       discountedAmount: getDiscountedAmount(),
       discountedAmountBtc: getDiscountedAmountBtc(),
       exchangeRate: RSBP.rate.get(),
-      bitcoinUri: getBitcoinUri(invoiceId)
+      bitcoinUri: getBitcoinUri(invoiceId),
+      time: now
     };
   };
 
