@@ -38,6 +38,7 @@
 
   let balanceStatus = null;
   let recommendedFeePerByte = 0;
+  let txLink = "#";
 
   let updateStatus = function () {
     $("#payment-status-div").removeClass("alert-danger");
@@ -48,6 +49,7 @@
     $("#payment-status-icon").removeClass("glyphicon-refresh");
     $("#payment-status-icon").removeClass("glyphicon-refresh-animate");
     $("#payment-status-text").text("");
+    $("#payment-status-link").parent().hide();
     if (!RSBP.connector.isOnline()) {
       $("#payment-status-div").addClass("alert-danger");
       $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
@@ -61,22 +63,24 @@
       $("#payment-status-div").addClass("alert-warning");
       $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
       $("#payment-status-text").text("Another payment has been received. Waiting for payment...");
+      $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID) {
       $("#payment-status-div").addClass("alert-success");
       $("#payment-status-text").text("Payment received!");
+      $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID_RBF) {
       $("#payment-status-div").addClass("alert-warning");
       $("#payment-status-text").text("Replaceable transaction received. You should wait for this message to disappear before releasing the goods, in about 10 minutes.");
+      $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID_LOW_FEE) {
       $("#payment-status-div").addClass("alert-warning");
       $("#payment-status-text").text("Low-fee transaction received. This might take a while to confirm, probably more than 20 minutes.");
+      $("#payment-status-link").prop("href", txLink).parent().show();
     }
   };
 
   let retrieveBalance = function () {
     console.info("Retrieving address balance...");
-
-    balanceStatus = BALANCE_STATUS.WAITING;
 
     RSBP.connector.ajax(
       "https://insight.bitpay.com/api/utils/estimatefee?nbBlocks=2"
@@ -102,6 +106,8 @@
         console.info("No transactions for this address yet");
         return;
       }
+
+      txLink = "https://www.blocktrail.com/BTC/tx/" + lastTx.txid;
 
       if (lastTx.time < invoice.time) {
         console.debug("Found past transaction, ignoring it");
@@ -145,6 +151,7 @@
   let startBalanceRetrieval = function () {
     if (RSBP.invoice.get() !== null && retrieveBalanceInterval === null) {
       console.info("Starting balance retrieval...");
+      updateStatus();
       retrieveBalance();
       retrieveBalanceInterval = window.setInterval(retrieveBalance, 5 * 1000);
     }
@@ -155,6 +162,7 @@
       console.info("Stopping balance retrieval...");
       window.clearInterval(retrieveBalanceInterval);
       retrieveBalanceInterval = null;
+      updateStatus();
     }
   };
 
@@ -195,7 +203,7 @@
 
     // Balance controller
     $("#payment-modal").on("shown.bs.modal", function () {
-      balanceStatus = null;
+      balanceStatus = BALANCE_STATUS.WAITING;
       startBalanceRetrieval();
     });
     $("#payment-modal").on("hidden.bs.modal", function () {
