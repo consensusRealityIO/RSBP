@@ -22,11 +22,6 @@
 
     // Setup currency amount input field
     $("#currency-amount-input-field").val(AMOUNT);
-    $("#currency-amount-input-field").keyup(function (evt) {
-      if (evt.which == 13) { // "Enter" key
-        $("#pay-button").trigger("click");
-      }
-    });
 
     // Log payment modal state
     $("#payment-modal").on("shown.bs.modal", function () {
