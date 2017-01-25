@@ -107,7 +107,7 @@
         return;
       }
 
-      txLink = "https://www.blocktrail.com/BTC/tx/" + lastTx.txid;
+      txLink = "https://insight.bitpay.com/tx/" + lastTx.txid;
 
       if (lastTx.time < invoice.time) {
         console.debug("Found past transaction, ignoring it");

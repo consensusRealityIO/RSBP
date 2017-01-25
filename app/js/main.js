@@ -11,11 +11,14 @@
 
     console.info("Starting app...");
 
+    const ADDRESS = RSBP_CONFIG.payee.address;
     const PAYEE_NAME = RSBP_CONFIG.payee.name;
     const CURRENCY = RSBP_CONFIG.payee.currency;
     const AMOUNT = RSBP_CONFIG.payee.amount;
 
     document.title = PAYEE_NAME;
+
+    $("#logo-link").prop("href", "https://insight.bitpay.com/address/" + ADDRESS);
 
     // Setup currency button
     $("#currency-button").text(CURRENCY);
