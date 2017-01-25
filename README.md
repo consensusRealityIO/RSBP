@@ -17,8 +17,8 @@ Parameters include:
 You can see a running example implementation here:
 https://consensusreality.io/demo/RSBP/pay.html
 
-3 minute How-to:
-https://www.youtube.com/watch?v=Obe2nyewab4
+2 minute demo:
+https://www.youtube.com/watch?v=YMXKmTM_PKE
 
 ## Installation
 
