@@ -76,7 +76,7 @@
   };
 
   let updateAddress = function () {
-    $("#payment-modal-address-value").text(invoice.address);
+    $("#payment-modal-address").text(invoice.address);
   };
 
   let updateQrCode = function () {
