@@ -16,7 +16,7 @@
     $("#pay-button").prop("disabled", !valid);
 
     let input = $("#currency-amount-input-field")[0];
-    let error = input.checkValidity() ? "" : "Enter Positive Number";
+    let error = input.checkValidity() ? "" : "Enter Amount";
 
     $("#currency-amount-input-error").text(error);
   };

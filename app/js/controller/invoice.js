@@ -77,6 +77,7 @@
 
   let updateAddress = function () {
     $("#payment-modal-address").text(invoice.address);
+    $("#payment-modal-address").prop("href", invoice.bitcoinUri);
   };
 
   let updateQrCode = function () {
