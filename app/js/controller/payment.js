@@ -14,21 +14,18 @@
   const BALANCE_STATUS_UPDATE_EVENT = new Event("balance-status-update");
   const BALANCE_STATUS = {
     WAITING: 0,
-    RESET: 1,
-    PAID: 2,
-    PAID_RBF: 3,
-    PAID_LOW_FEE: 4,
+    PAID: 1,
+    PAID_RBF: 2,
+    PAID_LOW_FEE: 3,
     toString: function (index) {
       switch (index) {
       case 0:
         return "WAITING";
       case 1:
-        return "RESET";
-      case 2:
         return "PAID";
-      case 3:
+      case 2:
         return "PAID_RBF";
-      case 4:
+      case 3:
         return "PAID_LOW_FEE";
       default:
         return null;
@@ -59,11 +56,6 @@
       $("#payment-status-icon").addClass("glyphicon-refresh");
       $("#payment-status-icon").addClass("glyphicon-refresh-animate");
       $("#payment-status-text").text("Waiting for payment");
-    } else if (balanceStatus === BALANCE_STATUS.RESET) {
-      $("#payment-status-div").addClass("alert-warning");
-      $("#payment-status-icon").addClass("glyphicon-exclamation-sign");
-      $("#payment-status-text").text("Another payment has been received. Waiting for payment...");
-      $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID) {
       $("#payment-status-div").addClass("alert-success");
       $("#payment-status-text").text("Payment Success!");
@@ -135,7 +127,6 @@
         }
       } else {
         console.info("Keep waiting...");
-        balanceStatus = BALANCE_STATUS.RESET;
       }
 
       console.info("Balance status: " + BALANCE_STATUS.toString(balanceStatus));
