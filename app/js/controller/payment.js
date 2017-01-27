@@ -90,7 +90,9 @@
     )
     .done(function (json) {
       let invoice = RSBP.invoice.get();
-      if (invoice === null) return;
+      if (invoice === null) {
+        return;
+      }
 
       let lastTx = json.txs[0]; // most recent tx is first element
 
@@ -111,7 +113,9 @@
 
       outputs.forEach(function (output) {
         if (output.scriptPubKey.addresses[0] == ADDRESS &&
-            output.value == invoice.discountedAmountBtc) validAmount = true;
+            output.value == invoice.discountedAmountBtc) {
+          validAmount = true;
+        }
       });
 
       if (validAmount) {
