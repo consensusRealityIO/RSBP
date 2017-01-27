@@ -11,7 +11,7 @@ body {
 }
 
 input:invalid {
-  box-shadow: 0 0 3px 1px red;
+  box-shadow: 0 0 1px 1px red;
 }
 
 input:focus:invalid {
