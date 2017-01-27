@@ -66,15 +66,15 @@
       $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID) {
       $("#payment-status-div").addClass("alert-success");
-      $("#payment-status-text").text("Payment received!");
+      $("#payment-status-text").text("Payment Success!");
       $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID_RBF) {
       $("#payment-status-div").addClass("alert-warning");
-      $("#payment-status-text").text("Replaceable transaction received. You should wait for this message to disappear before releasing the goods, in about 10 minutes.");
+      $("#payment-status-text").text("WARNING! Replace By Fee - Please wait for 1 confirmation.");
       $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID_LOW_FEE) {
       $("#payment-status-div").addClass("alert-warning");
-      $("#payment-status-text").text("Low-fee transaction received. This might take a while to confirm, probably more than 20 minutes.");
+      $("#payment-status-text").text("WARNING! Low Fee Detected - Please wait for 1 confirmation.");
       $("#payment-status-link").prop("href", txLink).parent().show();
     }
   };
