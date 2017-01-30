@@ -59,7 +59,6 @@
     } else if (balanceStatus === BALANCE_STATUS.PAID) {
       $("#payment-status-div").addClass("alert-success");
       $("#payment-status-text").text("Payment Success!");
-      $("#payment-status-link").prop("href", txLink).parent().show();
     } else if (balanceStatus === BALANCE_STATUS.PAID_RBF) {
       $("#payment-status-div").addClass("alert-warning");
       $("#payment-status-text").text("WARNING! Replace By Fee - Please wait for 1 confirmation.");
