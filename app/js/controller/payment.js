@@ -74,7 +74,7 @@
     console.info("Retrieving address balance...");
 
     RSBP.connector.ajax(
-      "https://insight.bitpay.com/api/utils/estimatefee?nbBlocks=2"
+      "https://insight.bitpay.com/api/utils/estimatefee?nbBlocks=6"
     )
     .done(function (json) {
       recommendedFeePerByte = json["2"] / 1000;
