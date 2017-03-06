@@ -76,7 +76,8 @@
   };
 
   let updateAddress = function () {
-    $("#payment-modal-address-value").text(invoice.address);
+    $("#payment-modal-address").text(invoice.address);
+    $("#payment-modal-address").prop("href", invoice.bitcoinUri);
   };
 
   let updateQrCode = function () {
@@ -85,6 +86,8 @@
   };
 
   let createInvoice = function (invoiceId) {
+    let now = Date.now() / 1000;
+
     return {
       id: invoiceId,
       payeeName: PAYEE_NAME,
@@ -96,7 +99,8 @@
       discountedAmount: getDiscountedAmount(),
       discountedAmountBtc: getDiscountedAmountBtc(),
       exchangeRate: RSBP.rate.get(),
-      bitcoinUri: getBitcoinUri(invoiceId)
+      bitcoinUri: getBitcoinUri(invoiceId),
+      time: now
     };
   };
 

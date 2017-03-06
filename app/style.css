@@ -11,7 +11,7 @@ body {
 }
 
 input:invalid {
-  box-shadow: 0 0 3px 1px red;
+  box-shadow: 0 0 1px 1px red;
 }
 
 input:focus:invalid {
@@ -35,6 +35,10 @@ div {
 #app-status-component {
   margin-top: 15px;
   margin-bottom: 20%;
+}
+
+.mt-1 { /* backport from Bootstrap v4 - "margin top 1" */
+  margin-top: 1rem;
 }
 
 .text-bold {

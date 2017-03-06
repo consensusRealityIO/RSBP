@@ -48,8 +48,22 @@
     $("#app-status-content").text("Disconnected. Reconnecting...");
   };
 
-  let update = function () {
+  let updateForm = function () {
+    let valid = $("#order-form")[0].checkValidity() &&
+                RSBP.connector.isOnline() &&
+                RSBP.rate.isValid();
+
+    $("#pay-button").prop("disabled", !valid);
+
+    let input = $("#currency-amount-input-field")[0];
+    let error = !firstOnline || input.checkValidity() ? "" : "Enter Valid Amount";
+
+    $("#currency-amount-input-error").text(error);
+  };
+
+  let updateStatus = function () {
     resetHtml();
+
     if (!firstOnline || !firstRate) {
       if (!firstOnline) {
         if (RSBP.connector.isOnline()) {
@@ -80,9 +94,11 @@
 
   $(document).ready(function () {
     console.info("Initializing app status controller...");
-    update();
-    window.addEventListener("connectivity", update);
-    window.addEventListener("rate", update);
+    $("#currency-amount-input-field").on("keyup", updateForm);
+    $("#currency-amount-input-field").on("change", updateForm);
+    window.addEventListener("connectivity", updateStatus);
+    window.addEventListener("rate", updateStatus);
+    updateStatus();
     console.info("App status controller initialized");
   });
 }());

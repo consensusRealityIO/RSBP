@@ -11,11 +11,8 @@
   "title-require": true,
   "spec-char-escape": true,
   "src-not-empty": true,
-
   "head-script-disabled": true,
-
   "alt-require": true,
-
   "doctype-html5": true,
   "id-class-value": "dash",
   "style-disabled": true,

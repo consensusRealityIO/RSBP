@@ -11,22 +11,20 @@
 
     console.info("Starting app...");
 
+    const ADDRESS = RSBP_CONFIG.payee.address;
     const PAYEE_NAME = RSBP_CONFIG.payee.name;
     const CURRENCY = RSBP_CONFIG.payee.currency;
     const AMOUNT = RSBP_CONFIG.payee.amount;
 
     document.title = PAYEE_NAME;
 
+    $("#logo-link").prop("href", "https://insight.bitpay.com/address/" + ADDRESS);
+
     // Setup currency button
     $("#currency-button").text(CURRENCY);
 
     // Setup currency amount input field
     $("#currency-amount-input-field").val(AMOUNT);
-    $("#currency-amount-input-field").keyup(function (evt) {
-      if (evt.which == 13) { // "Enter" key
-        $("#pay-button").trigger("click");
-      }
-    });
 
     // Log payment modal state
     $("#payment-modal").on("shown.bs.modal", function () {
