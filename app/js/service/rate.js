@@ -12,7 +12,7 @@
   const USE_CORS_PROXY = RSBP_CONFIG.rate.useCorsProxy;
   const EXPIRATION = RSBP_CONFIG.rate.expiration;
   const IS_BTC = CURRENCY === "BTC";
-  const URL = "https://api.bitcoinaverage.com/ticker/" + CURRENCY + "/last";
+  const URL = "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTCUSD";
   const RATE_EVENT = new Event("rate");
 
   let rate = 1;
