@@ -17,7 +17,6 @@ discount - The discount percentage to be applied to the converstion rate
 
 You can see a running example implementation here: 
 
-(EXAMPLE NO LONGER UP TO DATE - LEAVING HERE FOR REFERENCE)
   https://consensusreality.io/demo/app/pay.html
 
 or with parameters:
