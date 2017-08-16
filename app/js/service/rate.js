@@ -33,7 +33,7 @@
     console.info("Sending exchange rate request to " + URL);
     let jQXhr = RSBP.connector.ajax(URL, USE_CORS_PROXY);
     jQXhr.done(function (data) {
-      data = data['last'];
+      data = data["last"];
       console.info("Exchange rate received: 1 BTC = " + data + " " + CURRENCY);
       rate = data;
       rateReceivedTime = Date.now();
