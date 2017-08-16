@@ -12,7 +12,7 @@
   const USE_CORS_PROXY = RSBP_CONFIG.rate.useCorsProxy;
   const EXPIRATION = RSBP_CONFIG.rate.expiration;
   const IS_BTC = CURRENCY === "BTC";
-  const URL = "https://apiv2.bitcoinaverage.com/ticker/" + CURRENCY + "/last";
+  const URL = "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTC" + CURRENCY;
   const RATE_EVENT = new Event("rate");
 
   let rate = 1;
@@ -33,6 +33,7 @@
     console.info("Sending exchange rate request to " + URL);
     let jQXhr = RSBP.connector.ajax(URL, USE_CORS_PROXY);
     jQXhr.done(function (data) {
+      data = data['last'];
       console.info("Exchange rate received: 1 BTC = " + data + " " + CURRENCY);
       rate = data;
       rateReceivedTime = Date.now();
